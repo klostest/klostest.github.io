@@ -20,7 +20,7 @@ The book is aimed at business analysts and other aspiring data scientists. To ge
 
 I hope you find this book helpful on your journey to becoming a data scientist.
 
-Please let me know if you spot any errors, have a question, or other feedback.
+Please let me know if you spot any errors, have a question, or other feedback, by using the form at the bottom of the page.
 
 # Errors
 

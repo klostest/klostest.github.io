@@ -29,5 +29,5 @@ To help yourself and others get the most out of this book: please let me know if
 
 # Q&A
 
-Ask a question
+[Ask a question](https://docs.google.com/forms/d/e/1FAIpQLScop-llj_meLLmJCo4dTycqlJ2MxZFnVxMWsHPzt5aynrLXjw/viewform?usp=sf_link)
 

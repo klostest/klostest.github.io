@@ -17,8 +17,9 @@
 title: Steve Klosterman
 email: steve.klosterman@gmail.com
 description: Data Science and Machine Learning
-url: http://localhost:4000/ #http://klostest.github.io
+url: http://www.steveklosterman.com
 github_username: klostest
+google_analytics: UA-139834109-1
 
 # Build settings
 markdown: kramdown

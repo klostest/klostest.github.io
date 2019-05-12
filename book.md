@@ -16,7 +16,9 @@ In this book, you will learn how to explore data and create compelling visualiza
 - How do you communicate with the client who depends on your services?
 - How can you demonstrate the business value that your model creates?
 
-I hope you find this book helpful on your journey to becoming a data scientist. Please let me know if you spot any errors, have a question, or other feedback. I'll add them to this page as appropriate.
+I hope you find this book helpful on your journey to becoming a data scientist.
+
+Please let me know if you spot any errors, have a question, or other feedback. I'll add them to this page as appropriate.
 
 # Errors
 

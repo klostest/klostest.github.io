@@ -1,6 +1,6 @@
 ---
 layout: page
-title: My book "Data Science Projects with Python"
+title: "Data Science Projects with Python"
 permalink: /book/
 ---
 

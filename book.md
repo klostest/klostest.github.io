@@ -1,12 +1,14 @@
 ---
-layout: page
-title: "Data Science Projects with Python"
+layout: no-title-page
+title: "Book"
 permalink: /book/
 ---
 
-![book cover](/images/book_cover.jpg){:height="250px" width="203px"}
+## Data Science Projects with Python: A case study approach to successful data science projects using Python, pandas, and scikit-learn
 
-On Amazon: _[Data Science Projects with Python: A case study approach to successful data science projects using Python, pandas, and scikit-learn](https://www.amazon.com/Data-Science-Projects-Python-scikit-learn-dp-1838551026/dp/1838551026/)_
+[Amazon page](https://www.amazon.com/Data-Science-Projects-Python-scikit-learn-dp-1838551026/dp/1838551026/)
+
+![book cover](/assets/images/book_cover.jpg){:height="200px"}
 
 There are a lot of great data science and machine learning books out there. But most of them don't discuss what it's actually like to be a data scientist. What challenges will you face day-to-day? How do you make sure that your work will be useful to stakeholders? This book presents an end-to-end data science project as it may be encountered in a professional setting, with hands-on coding exercises and activities.
 

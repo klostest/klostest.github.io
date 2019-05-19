@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-05-19T11:52:08-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Steve Klosterman</title><subtitle>Data Science and Machine Learning</subtitle><entry><title type="html">Overfitting, underfitting, and the bias-variance tradeoff</title><link href="http://localhost:4000/over-under/" rel="alternate" type="text/html" title="Overfitting, underfitting, and the bias-variance tradeoff" /><published>2019-05-19T00:00:00-05:00</published><updated>2019-05-19T00:00:00-05:00</updated><id>http://localhost:4000/over-under-bias-var</id><content type="html" xml:base="http://localhost:4000/over-under/">&lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-05-19T12:28:26-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Steve Klosterman</title><subtitle>Data Science and Machine Learning</subtitle><entry><title type="html">Overfitting, underfitting, and the bias-variance tradeoff</title><link href="http://localhost:4000/over-under/" rel="alternate" type="text/html" title="Overfitting, underfitting, and the bias-variance tradeoff" /><published>2019-05-19T00:00:00-05:00</published><updated>2019-05-19T00:00:00-05:00</updated><id>http://localhost:4000/over-under-bias-var</id><content type="html" xml:base="http://localhost:4000/over-under/">&lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/images/suits-that-fit-bad-too-big-too-smal_cropped.jpg&quot; alt=&quot;Suit graphic&quot; style=&quot;width: 350px; border: 10px solid white;&quot; align=&quot;right&quot; /&gt;&lt;/p&gt;
 
@@ -54,7 +54,7 @@
 &lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ylim&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/images/output_4_1.png&quot; alt=&quot;png&quot; height=&quot;350px&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/output_4_1.png&quot; alt=&quot;png&quot; width=&quot;500px&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;This looks like the shape of a parabola, as expected for a quadratic transformation of &lt;script type=&quot;math/tex&quot;&gt;x&lt;/script&gt;. However we can see the noise in the fact that not all the points appear that they would lie perfectly on the parabola.&lt;/p&gt;
 
@@ -84,7 +84,7 @@
 &lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ylim&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/images/output_9_1.png&quot; alt=&quot;png&quot; height=&quot;350px&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/output_9_1.png&quot; alt=&quot;png&quot; width=&quot;500px&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;Doesn’t look like a very good fit, does it!&lt;/p&gt;
 
@@ -119,7 +119,7 @@
 &lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ylim&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/images/output_15_1.png&quot; alt=&quot;png&quot; height=&quot;350px&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/output_15_1.png&quot; alt=&quot;png&quot; width=&quot;500px&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;This is a classic case of overfitting. The overfit model passes nearly perfectly through all the training data. However it’s easy to see that for values in between, the overfit model does not look like a realistic representation of the data generating process. Rather, the overfit model has become tuned to the noise of the training data. This matches the definition of high variance given above.&lt;/p&gt;
 
@@ -141,7 +141,7 @@
 &lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ylim&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/images/output_17_1.png&quot; alt=&quot;png&quot; height=&quot;350px&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/output_17_1.png&quot; alt=&quot;png&quot; width=&quot;500px&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;That’s more like it. But what do we do in the real world, when we’re not using made-up data, and we don’t know the data generating process? There are a number of machine learning techniques to deal with overfitting. One of the most popular is regularization.&lt;/p&gt;
 
@@ -223,7 +223,7 @@
 &lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ylim&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/images/output_34_1.png&quot; alt=&quot;png&quot; height=&quot;350px&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/output_34_1.png&quot; alt=&quot;png&quot; width=&quot;500px&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;The regularized model looks similar to the ideal model. This shows that even if we don’t have knowledge of the data generating process, as we typically don’t in real-world predictive modeling work, we can still use regularization to reduce the effect of overfitting when a large number of candidate features are available.&lt;/p&gt;
 

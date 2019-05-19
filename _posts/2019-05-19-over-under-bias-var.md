@@ -61,7 +61,7 @@ plt.ylim([-20, 20])
 ```
 
 
-![png](/assets/images/output_4_1.png){:height="350px"}
+![png](/assets/images/output_4_1.png){:width="500px"}
 
 
 This looks like the shape of a parabola, as expected for a quadratic transformation of $$x$$. However we can see the noise in the fact that not all the points appear that they would lie perfectly on the parabola.
@@ -103,7 +103,7 @@ plt.ylim([-20, 20])
 ```
 
 
-![png](/assets/images/output_9_1.png){:height="350px"}
+![png](/assets/images/output_9_1.png){:width="500px"}
 
 
 Doesn't look like a very good fit, does it!
@@ -152,7 +152,7 @@ plt.ylim([-20, 20])
 ```
 
 
-![png](/assets/images/output_15_1.png){:height="350px"}
+![png](/assets/images/output_15_1.png){:width="500px"}
 
 
 This is a classic case of overfitting. The overfit model passes nearly perfectly through all the training data. However it's easy to see that for values in between, the overfit model does not look like a realistic representation of the data generating process. Rather, the overfit model has become tuned to the noise of the training data. This matches the definition of high variance given above.
@@ -178,7 +178,7 @@ plt.ylim([-20, 20])
 ```
 
 
-![png](/assets/images/output_17_1.png){:height="350px"}
+![png](/assets/images/output_17_1.png){:width="500px"}
 
 
 That's more like it. But what do we do in the real world, when we're not using made-up data, and we don't know the data generating process? There are a number of machine learning techniques to deal with overfitting. One of the most popular is regularization.
@@ -292,7 +292,7 @@ plt.ylim([-20, 20])
 ```
 
 
-![png](/assets/images/output_34_1.png){:height="350px"}
+![png](/assets/images/output_34_1.png){:width="500px"}
 
 
 The regularized model looks similar to the ideal model. This shows that even if we don't have knowledge of the data generating process, as we typically don't in real-world predictive modeling work, we can still use regularization to reduce the effect of overfitting when a large number of candidate features are available.

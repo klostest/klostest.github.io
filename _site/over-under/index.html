@@ -108,7 +108,7 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
 </code></pre></div></div>
 
-<p><img src="/assets/images/output_4_1.png" alt="png" height="350px" /></p>
+<p><img src="/assets/images/output_4_1.png" alt="png" width="500px" /></p>
 
 <p>This looks like the shape of a parabola, as expected for a quadratic transformation of <script type="math/tex">x</script>. However we can see the noise in the fact that not all the points appear that they would lie perfectly on the parabola.</p>
 
@@ -138,7 +138,7 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
 </code></pre></div></div>
 
-<p><img src="/assets/images/output_9_1.png" alt="png" height="350px" /></p>
+<p><img src="/assets/images/output_9_1.png" alt="png" width="500px" /></p>
 
 <p>Doesn’t look like a very good fit, does it!</p>
 
@@ -173,7 +173,7 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
 </code></pre></div></div>
 
-<p><img src="/assets/images/output_15_1.png" alt="png" height="350px" /></p>
+<p><img src="/assets/images/output_15_1.png" alt="png" width="500px" /></p>
 
 <p>This is a classic case of overfitting. The overfit model passes nearly perfectly through all the training data. However it’s easy to see that for values in between, the overfit model does not look like a realistic representation of the data generating process. Rather, the overfit model has become tuned to the noise of the training data. This matches the definition of high variance given above.</p>
 
@@ -195,7 +195,7 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
 </code></pre></div></div>
 
-<p><img src="/assets/images/output_17_1.png" alt="png" height="350px" /></p>
+<p><img src="/assets/images/output_17_1.png" alt="png" width="500px" /></p>
 
 <p>That’s more like it. But what do we do in the real world, when we’re not using made-up data, and we don’t know the data generating process? There are a number of machine learning techniques to deal with overfitting. One of the most popular is regularization.</p>
 
@@ -277,7 +277,7 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
 </code></pre></div></div>
 
-<p><img src="/assets/images/output_34_1.png" alt="png" height="350px" /></p>
+<p><img src="/assets/images/output_34_1.png" alt="png" width="500px" /></p>
 
 <p>The regularized model looks similar to the ideal model. This shows that even if we don’t have knowledge of the data generating process, as we typically don’t in real-world predictive modeling work, we can still use regularization to reduce the effect of overfitting when a large number of candidate features are available.</p>
 

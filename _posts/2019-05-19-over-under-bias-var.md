@@ -5,6 +5,9 @@ date:   2019-05-19
 mathjax: true
 permalink: /over-under/
 post_description: Explore these foundational machine learning concepts and learn how to use regularization to leverage the bias-variance tradeoff to improve model performance, through an illustrative example of polynomial fitting in Python and scikit-learn. 
+post_image: "/assets/images/suits-that-fit-bad-too-big-too-smal_cropped.jpg"
+reading_time_minutes: 25
+category: Technical
 ---
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
@@ -230,7 +233,7 @@ ridge = Ridge(alpha=0.001, fit_intercept=True, normalize=True,
 
 There are many options to set when instantiating the `Ridge` class. An important one is `alpha`. This controls how much regularization is applied; in other words, how strongly the coefficient magnitudes are penalized, and kept close to zero. We will use a value determined from experimentation just to illustrate the process. In general, the procedure for selecting `alpha` is to systematically evaluate a range of values, by examining model performance on a validation set or with a cross-validation procedure, to determine which one is expected to provide the best performance on the unseen test set. `alpha` is a model __hyperparameter__ and this would be the process of hyperparameter __tuning__.
 
-The other options we specified for `Ridge` indicate that we'd like to fit an intercept, normalize the features to the same scale before model fitting, which is necessary since the coefficients will all be penalized in the same way, and a few others. I'm glossing over these details here, although you can consult the scikit-learn documentation, as while as my [book](https://www.amazon.com/Data-Science-Projects-Python-valuable/dp/1838551026/){:target="_blank"}, for further information.
+The other options we specified for `Ridge` indicate that we'd like to fit an intercept, normalize the features to the same scale before model fitting, which is necessary since the coefficients will all be penalized in the same way, and a few others. I'm glossing over these details here, although you can consult the scikit-learn documentation, as while as my [book](/book/){:target="_blank"}, for further information.
 
 Now we proceed to fit the ridge regression using the polynomial features and the response variable.
 

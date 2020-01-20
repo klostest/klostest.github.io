@@ -21,6 +21,10 @@ layout: default
             {{ post.title | escape }}
           </a>
         </h3>
+	<img src={{post.post_image}} alt="Suit graphic" style="width: 350px; border: 10px solid white;"/>
+	<br>
+	<b> {{post.category}} post, {{post.reading_time_minutes}} minute read </b>
+	<br>
 	{{ post.post_description }}
       </li>
       {%- endfor -%}

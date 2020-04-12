@@ -923,7 +923,7 @@ Notice how you can interact with the plot, including mousing over to see details
 
 As you can see, there are many ways to customize visualizations with Plotly and I've likely only scratched the surface here. For me, the most important part was the hover text that I was able to customize to show all the information I wanted. But I also realized it's nice to be able to zoom in to particular regions of the plot to get a more detailed look.
 
-If you were looking to learn more about data wrangling with pandas and visualization with Plotly, or even do the specific task performed here, I hope you found this blog post helpful. For more data science and machine learning resources, check out my other posts as well as my book [Data Science Projects with Python: A case study approach to successful data science projects using Python, pandas, and scikit-learn](https://www.amazon.com/Data-Science-Projects-Python-scikit-learn-dp-1838551026/dp/1838551026/).
+If you were looking to learn more about data wrangling with pandas and visualization with Plotly, or even do the specific task performed here, I hope you found this blog post helpful. For more data science and machine learning resources, check out my [other posts](https://www.steveklosterman.com/) as well as my book [Data Science Projects with Python: A case study approach to successful data science projects using Python, pandas, and scikit-learn](https://www.amazon.com/Data-Science-Projects-Python-scikit-learn-dp-1838551026/dp/1838551026/).
 
 # Appendix: Creating the synthetic data
 Start with a bimonthly paycheck (`SM` = semi-month end frequency (15th and end of month)). This person got a raise starting in April. Good for them!

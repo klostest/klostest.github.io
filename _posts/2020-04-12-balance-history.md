@@ -385,7 +385,7 @@ transactions_df.head()
 
 
 
-Looking at the earliest transactions in the record, which come last in the reverse chronological order of the data, we can see that some dates have more than one transaction.
+Looking at the earliest transactions in the record, which come last in the reverse chronological order of the data, we can see that some dates have more than one transaction. Since we want a daily balance, we will need a way to combine rows that have the same date.
 
 
 ```python
@@ -479,7 +479,7 @@ transactions_df.tail()
 
 
 
-In order to have a daily balance, we need to collapse the data down to a date level. In other words, we need to group by date. To aggregate the transactions, we'll take the sum on each date, giving the net change in balance on that day. Also, in order to have the hover text for each date, we need to combine the strings in some way. Concatenating strings with a newline separator is a readable way to do this, and it turns out `<br>` is the way to get a newline in Plotly text.
+To collapse the data down to a date level, we can `groupby` date. Within each day, the way to `agg`regate transactions is to add them up, giving the net change in balance on that day. We'll also need a way to combine the text strings that describe the transactions, to have the hover text on the daily balance plot. Concatenating strings with a newline separator is a readable way to do this, and it turns out the HTML line break syntax `<br>` is what we'll need for our Plotly graph.
 
 
 ```python

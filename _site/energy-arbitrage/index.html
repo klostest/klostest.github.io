@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.0 -->
+<title>Designing an energy arbitrage strategy with linear programming | Steve Klosterman</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Designing an energy arbitrage strategy with linear programming" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Data Science and Machine Learning" />
+<meta property="og:description" content="Data Science and Machine Learning" />
+<link rel="canonical" href="http://localhost:4000/energy-arbitrage/" />
+<meta property="og:url" content="http://localhost:4000/energy-arbitrage/" />
+<meta property="og:site_name" content="Steve Klosterman" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-05-03T00:00:00-07:00" />
+<script type="application/ld+json">
+{"description":"Data Science and Machine Learning","@type":"BlogPosting","url":"http://localhost:4000/energy-arbitrage/","headline":"Designing an energy arbitrage strategy with linear programming","dateModified":"2020-05-03T00:00:00-07:00","datePublished":"2020-05-03T00:00:00-07:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/energy-arbitrage/"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Steve Klosterman" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Steve Klosterman</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/book/">Book</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        
+
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Designing an energy arbitrage strategy with linear programming</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2020-05-03T00:00:00-07:00" itemprop="datePublished">May 3, 2020
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+<p><img src="/assets/images/2020-05-03-energy-arbitrage/cable-clouds-conductor-current-189524.jpg" alt="Power lines, Photo by Pok Rie from Pexels, https://www.pexels.com/photo/cable-clouds-conductor-current-189524/" style="width: 350px; border: 10px solid white;" align="right" /></p>
+
+<p>The price of energy changes hourly, which opens up the possibility of temporal arbitrage: buying energy at a low price, storing it, and selling it later at a higher price. To successfully execute any temporal arbitrage strategy, some amount of confidence in future prices is required, to be able to expect to make a profit. In the case of energy arbitrage, the constraints of the energy storage system must also be considered. For example, batteries have limited capacity, limited rate of charging, and are not 100% efficient in that not all of the energy used to charge a battery will be available later for discharge.</p>
+
+<p>The goal of this post is to illustrate how the mathematical optimization technique of linear programming can be used to design an operating strategy for a grid-connected battery with a given set of operational constraints, under the assumption of known future prices. All of this will be done using real-world energy price data and open source tools in Python. The Jupyter notebook is available <a href="https://github.com/klostest/energy_arbitrage_work_sample/blob/master/Energy%20arbitrage.ipynb">here</a>.</p>
+
+<h1 id="problem-and-approach">Problem and approach</h1>
+
+<p>The task is to formulate an operation strategy for a grid connected battery system, to perform energy arbitrage on the New York Independent System Operator (NYISO) day-ahead market. What is the NYISO? According to their <a href="https://www.nyiso.com/what-we-do">website</a>,</p>
+<blockquote>
+  <p>The NYISO is the New York Independent System Operator — the organization responsible for managing New York’s electric grid and its competitive wholesale electric marketplace.</p>
+</blockquote>
+
+<p>The NYISO makes the next day’s hourly energy prices available at 11am each day (NYISO 2019, references available at bottom of page). The battery system we design here will schedule the next 24 hours of battery operation (noon of the current day through the 11am hour of the next day) using this information. We will assume that after the daily price announcement from the NYISO, the next 36 hours of price information are available: the prices for the remaining 12 hours of the current day, as well as 24 hours worth of prices for the next day. Therefore the optimization time horizon will be 36 hours, to take advantage of all available future price information.</p>
+
+<p>Since the operational schedule will be repeated each day, the last 12 hours of the 36 hour strategy will always be ignored. This is because new price information will become available at 11am the following day, which we can take advantage of. However these “extra 12 hours” of data are not wasted; I determined in initial experiments that having a 36 hour time horizon creates a more profitable arbitrage strategy than shorter horizons. This makes intuitive sense, because the more future information we can incorporate into the arbitrage strategy, the more profitable it should be. You can experiment with different horizons using the code below, although the horizon is assumed to be at least 24 hours here. The plan can be visualized as follows:</p>
+
+<p><img src="/assets/images/2020-05-03-energy-arbitrage/Slide2_crop.png" alt="png" /></p>
+
+<p>The battery is said to be a price taker, meaning its activities do not affect the price of energy. The price paid for power to charge the battery, and revenue from discharging, is the location based marginal price (LBMP), which takes in to account the system marginal price, congestion component, and marginal loss component (PJM Interconnection LLC). The goal is to maximize profit, given the day-ahead prices and the battery system’s parameters.</p>
+
+<p>In this scenario, where future prices are known and the battery system is a price taker, the problem of designing an operational strategy can be solved by linear programming (Salles et al. 2017, Sioshansi et al. 2009, Wang and Zhang 2018). In brief summary, <a href="https://en.wikipedia.org/wiki/Linear_programming">linear programming</a> is a well-known technique for either maximizing or minimizing some objective. In this case, we want to maximize profit. As long as the mathematical function describing the objective, known as the <strong>objective function</strong>, as well as the <strong>constraints</strong> of the system, can all be described as linear combinations of the <strong>decision variables</strong>, which define the operational strategy, linear programming can be used to optimize the system.</p>
+
+<h2 id="setting-up-the-linear-programming-problem-in-pulp">Setting up the linear programming problem in PuLP</h2>
+
+<p>Loosely following the notation of Sioshansi et al. (2009), here we’ll lay out the decision variables and add the contraints to a linear programming model in PuLP. Starting with the class definition in the cell after next, the markdown code snippets in this section should all be put together to define a class, which describes our battery system (see the <a href="https://github.com/klostest/energy_arbitrage_work_sample/blob/master/Energy%20arbitrage.ipynb">notebook</a> for confirmation). This model of the system will be useful to simulate battery operation, stepping through time at a daily increment.</p>
+
+<p>Before proceeding further let’s import the packages needed for this exercise.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#Load packages
+</span><span class="kn">import</span> <span class="nn">pulp</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="n">mpl</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span> 
+</code></pre></div></div>
+
+<p>Each day, a single optimization problem needs to be solved between 11am and 12pm, which will provide sufficient information to guide the battery’s operation for the next 36 hours. To guide the battery’s operation, we need to decide what the flow of energy will be for each discrete time step in the time horizon. Energy flows, also known as electrical power, can either be into or out of the battery. So we’ll create two decision variables, <script type="math/tex">c_t</script> and <script type="math/tex">d_t</script>, as the charging and discharging power flows, respectively (kW), at time <script type="math/tex">t</script>, which will be an hourly time step. The rates of charge or discharge are continuous variables and are bounded to be within the operating limits of the battery, for all time steps:</p>
+
+<script type="math/tex; mode=display">0 \le c_t, d_t \le \kappa, \forall t</script>
+
+<p>where <script type="math/tex">\kappa</script> (kW) is the maximum charge and discharge power capacity, which we’ll assume are equal here.</p>
+
+<p>We need to specify flow variables for each time step in the time horizon of optimization. PuLP provides a handy method <code class="highlighter-rouge">dicts</code> of the <code class="highlighter-rouge">LpVariable</code> class, which we can use to create charge and discharge flows for all time steps at once. We’ll start defining a class that will hold all the information governing the operation of the battery. The input <code class="highlighter-rouge">time_horizon</code> is an integer specifiying the number of hours in the optimization horizon, assumed here to be at least 24, and the other inputs are as described above:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Battery</span><span class="p">():</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">time_horizon</span><span class="p">,</span>
+                 <span class="n">max_discharge_power_capacity</span><span class="p">,</span>
+                 <span class="n">max_charge_power_capacity</span><span class="p">):</span>
+        <span class="c1">#Set up decision variables for optimization.
+</span>        <span class="c1">#These are the hourly charge and discharge flows for
+</span>        <span class="c1">#the optimization horizon, with their limitations.
+</span>        <span class="bp">self</span><span class="o">.</span><span class="n">time_horizon</span> <span class="o">=</span> <span class="n">time_horizon</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> \
+        <span class="n">pulp</span><span class="o">.</span><span class="n">LpVariable</span><span class="o">.</span><span class="n">dicts</span><span class="p">(</span>
+            <span class="s">"charging_power"</span><span class="p">,</span>
+            <span class="p">(</span><span class="s">'c_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">time_horizon</span><span class="p">)),</span>
+            <span class="n">lowBound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="n">max_charge_power_capacity</span><span class="p">,</span>
+            <span class="n">cat</span><span class="o">=</span><span class="s">'Continuous'</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">discharge</span> <span class="o">=</span> \
+        <span class="n">pulp</span><span class="o">.</span><span class="n">LpVariable</span><span class="o">.</span><span class="n">dicts</span><span class="p">(</span>
+            <span class="s">"discharging_power"</span><span class="p">,</span>
+            <span class="p">(</span><span class="s">'d_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">time_horizon</span><span class="p">)),</span>
+            <span class="n">lowBound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="n">max_discharge_power_capacity</span><span class="p">,</span>
+            <span class="n">cat</span><span class="o">=</span><span class="s">'Continuous'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>After setting up all the decision variables, it’s time to define the optimization problem that PuLP will solve for us. Our goal is to maximize profit <script type="math/tex">P</script> within the optimization time horizon, which can be defined as follows using charge flows and the price of energy:</p>
+
+<script type="math/tex; mode=display">P \left( d_t, c_t, p_t \right) = \frac{ \sum_{t=12\text{pm of current day}}^{11\text{pm of next day}} p_t \cdot (d_t - c_t) }{1000}</script>
+
+<p>where <script type="math/tex">p_t</script> is the LBMP ($/MWh) at time <script type="math/tex">t</script>. In terms of units, because <script type="math/tex">t</script> is an hourly time step, it effectively cancels the per hour part of the units of the LBMP. The objective function is divided by 1000 to account for the discrepancy in units (MW/kW), so ultimately the objective of profit will be in units of dollars. We’ll make this unit correction after running the simulation, so it won’t be reflected in the code here.</p>
+
+<p>The objective function is specified by adding the decision variables to the model object in PuLP, multiplying each by the appropriate cost or revenue that would come from charging or discharging that amount of energy. This multiplication of decision variables by prices is accomplished using an <code class="highlighter-rouge">LpAffineExpression</code>. The <code class="highlighter-rouge">prices</code> are determined by the LBMP, which we’ll select for the relevant time period when we run the simulation. For example, with a 36 hour time horizon, this would be noon the current day, through the 11pm hour the next day.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="k">def</span> <span class="nf">set_objective</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prices</span><span class="p">):</span>
+        <span class="c1">#Create a model and objective function.
+</span>        <span class="c1">#This uses price data, which must have one price
+</span>        <span class="c1">#for each point in the time horizon.
+</span>        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_horizon</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">'Error: need one price for each hour in time horizon'</span><span class="p">)</span>
+        
+        <span class="c1">#Instantiate linear programming model to maximize the objective
+</span>        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">pulp</span><span class="o">.</span><span class="n">LpProblem</span><span class="p">(</span><span class="s">"Energy arbitrage"</span><span class="p">,</span> <span class="n">pulp</span><span class="o">.</span><span class="n">LpMaximize</span><span class="p">)</span>
+    
+        <span class="c1">#Objective is profit
+</span>        <span class="c1">#This formula gives the daily profit from charging/discharging
+</span>        <span class="c1">#activities. Charging is a cost, discharging is a revenue
+</span>        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">+=</span> \
+        <span class="n">pulp</span><span class="o">.</span><span class="n">LpAffineExpression</span><span class="p">(</span>
+            <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">charge</span><span class="p">[</span><span class="s">'c_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)],</span>
+              <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">time_horizon</span><span class="p">)])</span> <span class="o">+</span>\
+        <span class="n">pulp</span><span class="o">.</span><span class="n">LpAffineExpression</span><span class="p">(</span>
+            <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">discharge</span><span class="p">[</span><span class="s">'d_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)],</span>
+              <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">time_horizon</span><span class="p">)])</span>
+</code></pre></div></div>
+
+<p>Having defined the model and the objective, now we need to add the battery’s operational constraints. The battery has limited capacity and so the optimization is subject to a battery storage constraint:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+0 <= \sum_{t_f = 1\text{pm of current day}}^{11\text{pm of next day}} \sum_{t=12\text{pm of current day}}^{t_f} s_{i} + \eta \cdot
+c_t - d_t <= \text{discharge energy capacity (kWh)} %]]></script>
+
+<p>where <script type="math/tex">s_i</script> is the state of energy (kWh) of the battery at the start of the 36-hour optimization period and <script type="math/tex">\eta</script> is the round-trip efficiency of the battery. This constraint requires the battery’s state of energy (sum of initial state and hourly power flows) to be between zero, assuming the battery has complete depth of discharge capabilities, and the battery’s discharge energy capacity, for each hour of the optimization horizon. In this constraint, the power flows (kW) are understood to be converted to units of energy (kWh) through multiplication by the one hour time step.</p>
+
+<p>In PuLP, constraints can be added to a model just like the objective function: using addition syntax. We can express these constraints by adding up the discharge flows using <code class="highlighter-rouge">lpSum</code>, and in the case of charge flows which need to be multiplied by efficiency, again an <code class="highlighter-rouge">LpAffineExpression</code>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="k">def</span> <span class="nf">add_storage_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                <span class="n">efficiency</span><span class="p">,</span>
+                                <span class="n">min_capacity</span><span class="p">,</span>
+                                <span class="n">discharge_energy_capacity</span><span class="p">,</span>
+                                <span class="n">initial_level</span><span class="p">):</span>
+        <span class="c1">#Storage level constraint 1
+</span>        <span class="c1">#This says the battery cannot have less than zero energy, at
+</span>        <span class="c1">#any hour in the horizon
+</span>        <span class="c1">#Note this is a place where round-trip efficiency is factored in.
+</span>        <span class="c1">#The energy available for discharge is the round-trip efficiency
+</span>        <span class="c1">#times the energy that was charged.       
+</span>        <span class="k">for</span> <span class="n">hour_of_sim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">time_horizon</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>     
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">+=</span> \
+            <span class="n">initial_level</span> \
+            <span class="o">+</span> <span class="n">pulp</span><span class="o">.</span><span class="n">LpAffineExpression</span><span class="p">(</span>
+                <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">charge</span><span class="p">[</span><span class="s">'c_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)],</span> <span class="n">efficiency</span><span class="p">)</span>
+                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">hour_of_sim</span><span class="p">)])</span> \
+            <span class="o">-</span> <span class="n">pulp</span><span class="o">.</span><span class="n">lpSum</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">discharge</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span><span class="p">(</span><span class="s">'d_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">hour_of_sim</span><span class="p">)))</span>\
+            <span class="o">&gt;=</span> <span class="n">min_capacity</span>
+            
+        <span class="c1">#Storage level constraint 2
+</span>        <span class="c1">#Similar to 1
+</span>        <span class="c1">#This says the battery cannot have more than the
+</span>        <span class="c1">#discharge energy capacity
+</span>        <span class="k">for</span> <span class="n">hour_of_sim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">time_horizon</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">+=</span> \
+            <span class="n">initial_level</span> \
+            <span class="o">+</span> <span class="n">pulp</span><span class="o">.</span><span class="n">LpAffineExpression</span><span class="p">(</span>
+                <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">charge</span><span class="p">[</span><span class="s">'c_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)],</span> <span class="n">efficiency</span><span class="p">)</span>
+                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">hour_of_sim</span><span class="p">)])</span> \
+            <span class="o">-</span> <span class="n">pulp</span><span class="o">.</span><span class="n">lpSum</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">discharge</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="p">(</span><span class="s">'d_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                              <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">hour_of_sim</span><span class="p">)))</span>\
+            <span class="o">&lt;=</span> <span class="n">discharge_energy_capacity</span>
+</code></pre></div></div>
+
+<p>Maximum daily discharged throughput <script type="math/tex">\tau</script> (kWh) is also constrained, which limits the amount of energy that can flow through the battery in a given day. We set this up so that the first day of the time horizon is subject to a 24 hour constraint, and whatever portion beyond that is subject to a fractional constraint. For example, in our 36 hour horizon, the constraints would be:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\sum_{t=12\text{pm of current day}}^{11\text{am of next day}} d_t <= \tau %]]></script>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\sum_{t=12\text{pm of next day}}^{11\text{pm of next day}} d_t <= 0.5 \cdot \tau %]]></script>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="k">def</span> <span class="nf">add_throughput_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                   <span class="n">max_daily_discharged_throughput</span><span class="p">):</span>
+        <span class="c1">#Maximum discharge throughput constraint
+</span>        <span class="c1">#The sum of all discharge flow within a day cannot exceed this
+</span>        <span class="c1">#Include portion of the next day according to time horizon
+</span>        <span class="c1">#Assumes the time horizon is at least 24 hours
+</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">+=</span> \
+        <span class="n">pulp</span><span class="o">.</span><span class="n">lpSum</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">discharge</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="s">'d_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">24</span><span class="p">)))</span> \
+        <span class="o">&lt;=</span> <span class="n">max_daily_discharged_throughput</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">+=</span> \
+        <span class="n">pulp</span><span class="o">.</span><span class="n">lpSum</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">discharge</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="s">'d_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">time_horizon</span><span class="p">)))</span> \
+        <span class="o">&lt;=</span> <span class="n">max_daily_discharged_throughput</span> \
+        <span class="o">*</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_horizon</span><span class="o">-</span><span class="mi">24</span><span class="p">)</span><span class="o">/</span><span class="mi">24</span>
+</code></pre></div></div>
+
+<p>Now that we’ve set up the model with an objective function and all constraints, we include methods to solve the problem, and report back the results, which are the optimal charge and discharge flows for each hour in the time horizon. As long as the problem we set up is feasible in terms of the constraints we’ve indicated, linear programming should work in that it will find an optimal solution, that maximizes profit. However if not, we will return a message indicating this.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="k">def</span> <span class="nf">solve_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#Solve the optimization problem
+</span>        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+        
+        <span class="c1">#Show a warning if an optimal solution was not found
+</span>        <span class="k">if</span> <span class="n">pulp</span><span class="o">.</span><span class="n">LpStatus</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">status</span><span class="p">]</span> <span class="o">!=</span> <span class="s">'Optimal'</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">'Warning: '</span> <span class="o">+</span> <span class="n">pulp</span><span class="o">.</span><span class="n">LpStatus</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">status</span><span class="p">])</span>
+            
+    <span class="k">def</span> <span class="nf">collect_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  
+        <span class="c1">#Collect hourly charging and discharging rates within the
+</span>        <span class="c1">#time horizon
+</span>        <span class="n">hourly_charges</span> <span class="o">=</span>\
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">charge</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">varValue</span> <span class="k">for</span>
+                 <span class="n">index</span> <span class="ow">in</span> <span class="p">(</span><span class="s">'c_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">24</span><span class="p">))])</span>
+        <span class="n">hourly_discharges</span> <span class="o">=</span>\
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">discharge</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">varValue</span> <span class="k">for</span>
+                 <span class="n">index</span> <span class="ow">in</span> <span class="p">(</span><span class="s">'d_t_'</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">24</span><span class="p">))])</span>
+
+        <span class="k">return</span> <span class="n">hourly_charges</span><span class="p">,</span> <span class="n">hourly_discharges</span>
+</code></pre></div></div>
+
+<p>This completes the <code class="highlighter-rouge">Battery</code> class. We are now ready to ingest the data and proceed to simulating battery operation.</p>
+
+<h1 id="import-price-data">Import price data</h1>
+<p>We obtain one year’s worth of LBMPs, so we can simulate the battery’s operation over this period of time. The data is available as LBMPs for several zones, at an hourly time step. Here we load the CSV files (one per day) and concatenate them on to a <code class="highlighter-rouge">DataFrame</code>. You can obtain these data from the <a href="https://github.com/klostest/energy_arbitrage_work_sample">git repo</a> accompanying this blog post. The data were downloaded from <a href="http://mis.nyiso.com/public/">here</a> on May 2, 2020, as zipped directories of CSV files (Pricing Data, Day-Ahead Market (DAM) LBMP, Zonal P-2A).</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#Directory of data
+</span><span class="n">data_dir</span> <span class="o">=</span> <span class="s">'./data_2019_2020_from_web/'</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">dir_list</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+<span class="n">dir_list</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+<span class="n">dir_list</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>['.DS_Store',
+ '20190501damlbmp_zone_csv',
+ '20190601damlbmp_zone_csv',
+ '20190701damlbmp_zone_csv',
+ '20190801damlbmp_zone_csv',
+ '20190901damlbmp_zone_csv',
+ '20191001damlbmp_zone_csv',
+ '20191101damlbmp_zone_csv',
+ '20191201damlbmp_zone_csv',
+ '20200101damlbmp_zone_csv',
+ '20200201damlbmp_zone_csv',
+ '20200301damlbmp_zone_csv',
+ '20200401damlbmp_zone_csv']
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#Remove invisible files (i.e. .DS_Store used by Mac OS)
+</span><span class="k">for</span> <span class="n">this_item</span> <span class="ow">in</span> <span class="n">dir_list</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">this_item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'.'</span><span class="p">:</span>
+        <span class="n">dir_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">this_item</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Loop through all the subdirectories, loading all the CSV files.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tic</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="c1">#count loaded files
+</span><span class="n">file_counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="c1">#For each subdirectory in the parent directory
+</span><span class="k">for</span> <span class="n">this_sub_dir</span> <span class="ow">in</span> <span class="n">dir_list</span><span class="p">:</span>
+    <span class="c1">#List the files
+</span>    <span class="n">this_sub_dir_list</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s">'/'</span> <span class="o">+</span> <span class="n">this_sub_dir</span><span class="p">)</span>
+    <span class="c1">#Sort the list
+</span>    <span class="n">this_sub_dir_list</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="c1">#Delete invisible files (that start with '.')
+</span>    <span class="k">for</span> <span class="n">this_item</span> <span class="ow">in</span> <span class="n">this_sub_dir_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">this_item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'.'</span><span class="p">:</span>
+            <span class="n">this_sub_dir_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">this_item</span><span class="p">)</span>
+    <span class="c1">#For each file in the subdirectory
+</span>    <span class="k">for</span> <span class="n">this_file</span> <span class="ow">in</span> <span class="n">this_sub_dir_list</span><span class="p">:</span>
+        <span class="c1">#Load the contents into a DataFrame
+</span>        <span class="n">this_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s">'/'</span> <span class="o">+</span> <span class="n">this_sub_dir</span> <span class="o">+</span> <span class="s">'/'</span> <span class="o">+</span> <span class="n">this_file</span><span class="p">)</span>
+        <span class="c1">#Concatenate with existing data if past first file
+</span>        <span class="k">if</span> <span class="n">file_counter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">all_data</span> <span class="o">=</span> <span class="n">this_df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">all_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">all_data</span><span class="p">,</span> <span class="n">this_df</span><span class="p">])</span>
+        
+        <span class="n">file_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="n">toc</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">toc</span><span class="o">-</span><span class="n">tic</span><span class="p">)</span> <span class="o">+</span> <span class="s">' seconds run time'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2.1731250286102295 seconds run time
+</code></pre></div></div>
+
+<p>Examine the data</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+Int64Index: 131760 entries, 0 to 359
+Data columns (total 6 columns):
+ #   Column                             Non-Null Count   Dtype  
+---  ------                             --------------   -----  
+ 0   Time Stamp                         131760 non-null  object 
+ 1   Name                               131760 non-null  object 
+ 2   PTID                               131760 non-null  int64  
+ 3   LBMP ($/MWHr)                      131760 non-null  float64
+ 4   Marginal Cost Losses ($/MWHr)      131760 non-null  float64
+ 5   Marginal Cost Congestion ($/MWHr)  131760 non-null  float64
+dtypes: float64(3), int64(1), object(2)
+memory usage: 7.0+ MB
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Time Stamp</th>
+      <th>Name</th>
+      <th>PTID</th>
+      <th>LBMP ($/MWHr)</th>
+      <th>Marginal Cost Losses ($/MWHr)</th>
+      <th>Marginal Cost Congestion ($/MWHr)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>05/01/2019 00:00</td>
+      <td>CAPITL</td>
+      <td>61757</td>
+      <td>20.43</td>
+      <td>0.93</td>
+      <td>-4.04</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>05/01/2019 00:00</td>
+      <td>CENTRL</td>
+      <td>61754</td>
+      <td>16.17</td>
+      <td>0.15</td>
+      <td>-0.55</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>05/01/2019 00:00</td>
+      <td>DUNWOD</td>
+      <td>61760</td>
+      <td>20.13</td>
+      <td>1.50</td>
+      <td>-3.17</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>05/01/2019 00:00</td>
+      <td>GENESE</td>
+      <td>61753</td>
+      <td>15.62</td>
+      <td>-0.26</td>
+      <td>-0.43</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>05/01/2019 00:00</td>
+      <td>H Q</td>
+      <td>61844</td>
+      <td>15.09</td>
+      <td>-0.37</td>
+      <td>0.00</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>Sanity checks on data. Considering we have 12 months of data including a February 29th from a leap year, were 366 days of data loaded?</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">assert</span> <span class="n">file_counter</span> <span class="o">==</span> <span class="mi">366</span>
+</code></pre></div></div>
+
+<p>How many zones are there, and what are they?</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">unique_names</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[</span><span class="s">'Name'</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_names</span><span class="p">))</span>
+<span class="n">unique_names</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>15
+
+array(['CAPITL', 'CENTRL', 'DUNWOD', 'GENESE', 'H Q', 'HUD VL', 'LONGIL',
+       'MHK VL', 'MILLWD', 'N.Y.C.', 'NORTH', 'NPX', 'O H', 'PJM', 'WEST'],
+      dtype=object)
+</code></pre></div></div>
+
+<p>How may rows are there?</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data</span><span class="o">.</span><span class="n">shape</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(131760, 6)
+</code></pre></div></div>
+
+<p>Check that number of rows = number of zones times 24 hours a day times 366 days a year:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">assert</span> <span class="mi">15</span><span class="o">*</span><span class="mi">24</span><span class="o">*</span><span class="mi">366</span> <span class="o">==</span> <span class="n">all_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>For this example we’ll concern ourselves only with New York City. Select out the data of interest (specific zone):</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">zone_of_interest</span> <span class="o">=</span> <span class="s">'N.Y.C.'</span>
+<span class="n">all_data</span> <span class="o">=</span> <span class="n">all_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">all_data</span><span class="p">[</span><span class="s">'Name'</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="n">zone_of_interest</span><span class="p">]),:]</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data</span><span class="o">.</span><span class="n">shape</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(8784, 6)
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">DataFrame</code> will be easier to use with a <code class="highlighter-rouge">DatetimeIndex</code>.
+Reset the index to the time stamp:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data</span> <span class="o">=</span> <span class="n">all_data</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s">'Time Stamp'</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p>Cast as <code class="highlighter-rouge">datetime</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">all_data</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s">'</span><span class="si">%</span><span class="s">m/</span><span class="si">%</span><span class="s">d/</span><span class="si">%</span><span class="s">Y </span><span class="si">%</span><span class="s">H:</span><span class="si">%</span><span class="s">M'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Let’s examine how the data look around the daylight savings transition:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">start_time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="mi">2019</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">hour</span><span class="o">=</span><span class="mi">23</span><span class="p">)</span>
+<span class="n">end_time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="mi">2019</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">hour</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">time_test_1</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[</span><span class="n">start_time</span><span class="p">:</span><span class="n">end_time</span><span class="p">]</span>
+<span class="n">time_test_1</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Name</th>
+      <th>PTID</th>
+      <th>LBMP ($/MWHr)</th>
+      <th>Marginal Cost Losses ($/MWHr)</th>
+      <th>Marginal Cost Congestion ($/MWHr)</th>
+    </tr>
+    <tr>
+      <th>Time Stamp</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2019-11-02 23:00:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>18.17</td>
+      <td>1.15</td>
+      <td>-5.74</td>
+    </tr>
+    <tr>
+      <th>2019-11-03 00:00:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>19.03</td>
+      <td>1.09</td>
+      <td>-6.85</td>
+    </tr>
+    <tr>
+      <th>2019-11-03 01:00:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>17.44</td>
+      <td>0.99</td>
+      <td>-6.21</td>
+    </tr>
+    <tr>
+      <th>2019-11-03 01:00:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>17.35</td>
+      <td>1.02</td>
+      <td>-5.72</td>
+    </tr>
+    <tr>
+      <th>2019-11-03 02:00:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>16.64</td>
+      <td>0.87</td>
+      <td>-6.45</td>
+    </tr>
+    <tr>
+      <th>2019-11-03 03:00:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>16.23</td>
+      <td>0.93</td>
+      <td>-5.70</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>We can see that there are two entries for 1am, where the second one was a result of the clocks being “turned back”. In order to do arithmetic with this <code class="highlighter-rouge">DatetimeIndex</code>, we need to make it timezone-aware. Pandas makes this easy and handles the duplicate 1am row appropriately:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> \
+<span class="n">all_data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tz_localize</span><span class="p">(</span><span class="s">'America/New_York'</span><span class="p">,</span> <span class="n">ambiguous</span><span class="o">=</span><span class="s">'infer'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">time_test_2</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[</span><span class="n">start_time</span><span class="p">:</span><span class="n">end_time</span><span class="p">]</span>
+<span class="n">time_test_2</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Name</th>
+      <th>PTID</th>
+      <th>LBMP ($/MWHr)</th>
+      <th>Marginal Cost Losses ($/MWHr)</th>
+      <th>Marginal Cost Congestion ($/MWHr)</th>
+    </tr>
+    <tr>
+      <th>Time Stamp</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2019-11-02 23:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>18.17</td>
+      <td>1.15</td>
+      <td>-5.74</td>
+    </tr>
+    <tr>
+      <th>2019-11-03 00:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>19.03</td>
+      <td>1.09</td>
+      <td>-6.85</td>
+    </tr>
+    <tr>
+      <th>2019-11-03 01:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>17.44</td>
+      <td>0.99</td>
+      <td>-6.21</td>
+    </tr>
+    <tr>
+      <th>2019-11-03 01:00:00-05:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>17.35</td>
+      <td>1.02</td>
+      <td>-5.72</td>
+    </tr>
+    <tr>
+      <th>2019-11-03 02:00:00-05:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>16.64</td>
+      <td>0.87</td>
+      <td>-6.45</td>
+    </tr>
+    <tr>
+      <th>2019-11-03 03:00:00-05:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>16.23</td>
+      <td>0.93</td>
+      <td>-5.70</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>Now we can see that the offset from UTC is indicated. Let’s double check the beginning and end of our data before proceeding.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Name</th>
+      <th>PTID</th>
+      <th>LBMP ($/MWHr)</th>
+      <th>Marginal Cost Losses ($/MWHr)</th>
+      <th>Marginal Cost Congestion ($/MWHr)</th>
+    </tr>
+    <tr>
+      <th>Time Stamp</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2019-05-01 00:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>20.32</td>
+      <td>1.69</td>
+      <td>-3.18</td>
+    </tr>
+    <tr>
+      <th>2019-05-01 01:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>17.09</td>
+      <td>1.62</td>
+      <td>-0.06</td>
+    </tr>
+    <tr>
+      <th>2019-05-01 02:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>14.89</td>
+      <td>1.37</td>
+      <td>-0.05</td>
+    </tr>
+    <tr>
+      <th>2019-05-01 03:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>14.49</td>
+      <td>1.29</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>2019-05-01 04:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>14.49</td>
+      <td>1.27</td>
+      <td>0.00</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Name</th>
+      <th>PTID</th>
+      <th>LBMP ($/MWHr)</th>
+      <th>Marginal Cost Losses ($/MWHr)</th>
+      <th>Marginal Cost Congestion ($/MWHr)</th>
+    </tr>
+    <tr>
+      <th>Time Stamp</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2020-04-30 19:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>18.92</td>
+      <td>1.49</td>
+      <td>-4.15</td>
+    </tr>
+    <tr>
+      <th>2020-04-30 20:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>20.91</td>
+      <td>1.52</td>
+      <td>-5.60</td>
+    </tr>
+    <tr>
+      <th>2020-04-30 21:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>18.08</td>
+      <td>1.48</td>
+      <td>-3.36</td>
+    </tr>
+    <tr>
+      <th>2020-04-30 22:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>16.36</td>
+      <td>1.45</td>
+      <td>-1.75</td>
+    </tr>
+    <tr>
+      <th>2020-04-30 23:00:00-04:00</th>
+      <td>N.Y.C.</td>
+      <td>61761</td>
+      <td>16.17</td>
+      <td>1.35</td>
+      <td>-1.72</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>Looks like the data span the year in time from May 1, 2019 through the end of April 2020, as intended.</p>
+
+<h1 id="run-the-simulation">Run the simulation</h1>
+<p>In this section, we’ll define a function, <code class="highlighter-rouge">simulate_battery</code>, that simulates the operation of the battery for energy arbitrage over the course of a year. Here are the inputs to the function:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">initial_level</code>, the initial level of battery charge at start of simulation (kWh)</li>
+  <li><code class="highlighter-rouge">price_data</code>, the <code class="highlighter-rouge">DataFrame</code> with the hourly LBMP ($/MWh)</li>
+  <li><code class="highlighter-rouge">max_discharge_power_capacity</code>, <script type="math/tex">\kappa</script> (kW)</li>
+  <li><code class="highlighter-rouge">max_charge_power_capacity</code>, also <script type="math/tex">\kappa</script> (kW)</li>
+  <li><code class="highlighter-rouge">discharge_energy_capacity</code> (kWh)</li>
+  <li><code class="highlighter-rouge">efficiency</code>, the AC-AC Round-trip efficiency, <script type="math/tex">\eta</script> (unitless)</li>
+  <li><code class="highlighter-rouge">max_daily_discharged_throughput</code>, <script type="math/tex">\tau</script> (kWh)</li>
+  <li><code class="highlighter-rouge">time_horizon</code>, the optimization time horizon (h), assumed here to be greater than or equal to 24.</li>
+  <li><code class="highlighter-rouge">start_day</code>, a pandas <code class="highlighter-rouge">Timestamp</code> for noon on the first simulation day</li>
+</ul>
+
+<p>The function returns several outputs that can be used to examine system operation:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">all_hourly_charges</code>, <code class="highlighter-rouge">all_hourly_discharges</code>, <code class="highlighter-rouge">all_hourly_state_of_energy</code>, charging and discharging activity, and state of energy, at an hourly time step (kWh)</li>
+  <li><code class="highlighter-rouge">all_daily_discharge_throughput</code>, discharged throughput at a daily time step (kWh)</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">simulate_battery</span><span class="p">(</span><span class="n">initial_level</span><span class="p">,</span>
+                     <span class="n">price_data</span><span class="p">,</span>
+                     <span class="n">max_discharge_power_capacity</span><span class="p">,</span>
+                     <span class="n">max_charge_power_capacity</span><span class="p">,</span>
+                     <span class="n">discharge_energy_capacity</span><span class="p">,</span>
+                     <span class="n">efficiency</span><span class="p">,</span>
+                     <span class="n">max_daily_discharged_throughput</span><span class="p">,</span>
+                     <span class="n">time_horizon</span><span class="p">,</span>
+                     <span class="n">start_day</span><span class="p">):</span>
+    <span class="c1">#Track simulation time
+</span>    <span class="n">tic</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    
+    <span class="c1">#Initialize output variables
+</span>    <span class="n">all_hourly_charges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">all_hourly_discharges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">all_hourly_state_of_energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">all_daily_discharge_throughput</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="c1">#Set up decision variables for optimization by
+</span>    <span class="c1">#instantiating the Battery class
+</span>    <span class="n">battery</span> <span class="o">=</span> <span class="n">Battery</span><span class="p">(</span>
+        <span class="n">time_horizon</span><span class="o">=</span><span class="n">time_horizon</span><span class="p">,</span>
+        <span class="n">max_discharge_power_capacity</span><span class="o">=</span><span class="n">max_discharge_power_capacity</span><span class="p">,</span>
+        <span class="n">max_charge_power_capacity</span><span class="o">=</span><span class="n">max_charge_power_capacity</span><span class="p">)</span>
+    
+    <span class="c1">#############################################
+</span>    <span class="c1">#Run the optimization for each day of the year.
+</span>    <span class="c1">#############################################
+</span>    
+    <span class="c1">#There are 365 24-hour periods (noon to noon) in the simulation,
+</span>    <span class="c1">#contained within 366 days
+</span>    <span class="k">for</span> <span class="n">day_count</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">365</span><span class="p">):</span>
+        <span class="c1">#print('Trying day {}'.format(day_count))
+</span>        
+        <span class="c1">#############################################
+</span>        <span class="c1">### Select data and simulate daily operation
+</span>        <span class="c1">#############################################
+</span>        
+        <span class="c1">#Set up the 36 hour optimization horizon for this day by
+</span>        <span class="c1">#adding to the first day/time of the simulation
+</span>        <span class="n">start_time</span> <span class="o">=</span> <span class="n">start_day</span> \
+        <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">day_count</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">'days'</span><span class="p">)</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">start_time</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">time_horizon</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">'hours'</span><span class="p">)</span>
+        <span class="c1">#print(start_time, end_time)
+</span>    
+        <span class="c1">#Retrieve the price data that will be used to calculate the
+</span>        <span class="c1">#objective
+</span>        <span class="n">prices</span> <span class="o">=</span> \
+        <span class="n">price_data</span><span class="p">[</span><span class="n">start_time</span><span class="p">:</span><span class="n">end_time</span><span class="p">][</span><span class="s">'LBMP ($/MWHr)'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+                      
+        <span class="c1">#Create model and objective
+</span>        <span class="n">battery</span><span class="o">.</span><span class="n">set_objective</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span>
+
+        <span class="c1">#Set storage constraints
+</span>        <span class="n">battery</span><span class="o">.</span><span class="n">add_storage_constraints</span><span class="p">(</span>
+            <span class="n">efficiency</span><span class="o">=</span><span class="n">efficiency</span><span class="p">,</span>
+            <span class="n">min_capacity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">discharge_energy_capacity</span><span class="o">=</span><span class="n">discharge_energy_capacity</span><span class="p">,</span>
+            <span class="n">initial_level</span><span class="o">=</span><span class="n">initial_level</span><span class="p">)</span>
+            
+        <span class="c1">#Set maximum discharge throughput constraint
+</span>        <span class="n">battery</span><span class="o">.</span><span class="n">add_throughput_constraints</span><span class="p">(</span>
+            <span class="n">max_daily_discharged_throughput</span><span class="o">=</span>
+            <span class="n">max_daily_discharged_throughput</span><span class="p">)</span>
+
+        <span class="c1">#Solve the optimization problem and collect output
+</span>        <span class="n">battery</span><span class="o">.</span><span class="n">solve_model</span><span class="p">()</span>
+        <span class="n">hourly_charges</span><span class="p">,</span> <span class="n">hourly_discharges</span> <span class="o">=</span> <span class="n">battery</span><span class="o">.</span><span class="n">collect_output</span><span class="p">()</span>
+        
+        <span class="c1">#############################################
+</span>        <span class="c1">### Manipulate daily output for data analysis
+</span>        <span class="c1">#############################################
+</span>        
+        <span class="c1">#Collect daily discharge throughput
+</span>        <span class="n">daily_discharge_throughput</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">hourly_discharges</span><span class="p">)</span>
+        <span class="c1">#Calculate net hourly power flow (kW), needed for state of energy.
+</span>        <span class="c1">#Charging needs to factor in efficiency, as not all charged power
+</span>        <span class="c1">#is available for discharge.
+</span>        <span class="n">net_hourly_activity</span> <span class="o">=</span> <span class="p">(</span><span class="n">hourly_charges</span><span class="o">*</span><span class="n">efficiency</span><span class="p">)</span> \
+        <span class="o">-</span> <span class="n">hourly_discharges</span>
+        <span class="c1">#Cumulative changes in energy over time (kWh) from some baseline
+</span>        <span class="n">cumulative_hourly_activity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">net_hourly_activity</span><span class="p">)</span>
+        <span class="c1">#Add the baseline for hourly state of energy during the next
+</span>        <span class="c1">#time step (t2)
+</span>        <span class="n">state_of_energy_from_t2</span> <span class="o">=</span> <span class="n">initial_level</span> \
+        <span class="o">+</span> <span class="n">cumulative_hourly_activity</span>
+        
+        <span class="c1">#Append output
+</span>        <span class="n">all_hourly_charges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">all_hourly_charges</span><span class="p">,</span> <span class="n">hourly_charges</span><span class="p">)</span>
+        <span class="n">all_hourly_discharges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">all_hourly_discharges</span><span class="p">,</span> <span class="n">hourly_discharges</span><span class="p">)</span>
+        <span class="n">all_hourly_state_of_energy</span> <span class="o">=</span> \
+        <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">all_hourly_state_of_energy</span><span class="p">,</span> <span class="n">state_of_energy_from_t2</span><span class="p">)</span>
+        <span class="n">all_daily_discharge_throughput</span> <span class="o">=</span> \
+        <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">all_daily_discharge_throughput</span><span class="p">,</span> <span class="n">daily_discharge_throughput</span><span class="p">)</span>
+        
+        <span class="c1">#############################################
+</span>        <span class="c1">### Set up the next day
+</span>        <span class="c1">#############################################
+</span>        
+        <span class="c1">#Initial level for next period is the end point of current period
+</span>        <span class="n">initial_level</span> <span class="o">=</span> <span class="n">state_of_energy_from_t2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+        
+
+    <span class="n">toc</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        
+    <span class="k">print</span><span class="p">(</span><span class="s">'Total simulation time: '</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">toc</span><span class="o">-</span><span class="n">tic</span><span class="p">)</span> <span class="o">+</span> <span class="s">' seconds'</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">all_hourly_charges</span><span class="p">,</span> <span class="n">all_hourly_discharges</span><span class="p">,</span> \
+        <span class="n">all_hourly_state_of_energy</span><span class="p">,</span>\
+        <span class="n">all_daily_discharge_throughput</span>
+</code></pre></div></div>
+
+<p>Now we’ll run our simulation through the year, using the following illustrative values for the battery’s parameters.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">max_discharge_power_capacity</span> <span class="o">=</span> <span class="mi">100</span> <span class="c1">#(kW)
+</span><span class="n">max_charge_power_capacity</span> <span class="o">=</span> <span class="mi">100</span> <span class="c1">#(kW)
+</span><span class="n">discharge_energy_capacity</span> <span class="o">=</span> <span class="mi">200</span> <span class="c1">#(kWh)
+</span><span class="n">efficiency</span> <span class="o">=</span> <span class="mf">0.85</span> <span class="c1">#unitless
+</span><span class="n">max_daily_discharged_throughput</span> <span class="o">=</span> <span class="mi">200</span>  <span class="c1">#(kWh)
+</span></code></pre></div></div>
+
+<p>To kick things off, we’ll assume the battery is half-way charged to start.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">initial_level</span> <span class="o">=</span> <span class="n">discharge_energy_capacity</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">initial_level</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>100.0
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_hourly_charges</span><span class="p">,</span> <span class="n">all_hourly_discharges</span><span class="p">,</span> <span class="n">all_hourly_state_of_energy</span><span class="p">,</span>\
+<span class="n">all_daily_discharge_throughput</span> <span class="o">=</span> \
+<span class="n">simulate_battery</span><span class="p">(</span><span class="n">initial_level</span><span class="o">=</span><span class="n">initial_level</span><span class="p">,</span>
+                 <span class="n">price_data</span><span class="o">=</span><span class="n">all_data</span><span class="p">,</span>
+                 <span class="n">max_discharge_power_capacity</span>
+                     <span class="o">=</span><span class="n">max_discharge_power_capacity</span><span class="p">,</span>
+                 <span class="n">max_charge_power_capacity</span>
+                     <span class="o">=</span><span class="n">max_charge_power_capacity</span><span class="p">,</span>
+                 <span class="n">discharge_energy_capacity</span><span class="o">=</span><span class="n">discharge_energy_capacity</span><span class="p">,</span>
+                 <span class="n">efficiency</span><span class="o">=</span><span class="n">efficiency</span><span class="p">,</span>
+                 <span class="n">max_daily_discharged_throughput</span>
+                     <span class="o">=</span><span class="n">max_daily_discharged_throughput</span><span class="p">,</span>
+                 <span class="n">time_horizon</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
+                 <span class="n">start_day</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span>
+                     <span class="n">year</span><span class="o">=</span><span class="mi">2019</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">hour</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+                     <span class="n">tz</span><span class="o">=</span><span class="s">'America/New_York'</span><span class="p">))</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Total simulation time: 20.976715087890625 seconds
+</code></pre></div></div>
+
+<p>Sanity check: the number of simulated hours should be:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">assert</span> <span class="mi">24</span><span class="o">*</span><span class="mi">365</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_hourly_discharges</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h1 id="analyze-battery-operation">Analyze battery operation</h1>
+<p>Now we’ll look at a suite of indicators of how the battery operated. We can check that all the constraints were satisfied, and analyze the financial impact of our system.</p>
+
+<h2 id="power-output">Power output</h2>
+<p>Define power output with discharging as positive and charging as negative.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">"figure.figsize"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">"figure.dpi"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">"font.size"</span><span class="p">:</span><span class="mi">12</span><span class="p">})</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">all_hourly_discharges</span> <span class="o">-</span> <span class="n">all_hourly_charges</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'kW'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">'Hourly power output'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0.5, 1.0, 'Hourly power output')
+</code></pre></div></div>
+
+<p><img src="/assets/images/2020-05-03-energy-arbitrage/output_62_1.png" alt="png" /></p>
+
+<p>This indicates that for most hours over the year, the power is close to zero. In other words, the battery is neither charging nor discharging. However it is also common for the battery to be operating at the limits of its range [-100, 100] kW.</p>
+
+<h2 id="state-of-energy">State of energy</h2>
+<p>The battery state of energy should be no less than zero, and no greater than the discharge energy capcacity, at any time: [0, 200] kWh.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">all_hourly_state_of_energy</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'kWh'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">'Hourly state of energy'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0.5, 1.0, 'Hourly state of energy')
+</code></pre></div></div>
+
+<p><img src="/assets/images/2020-05-03-energy-arbitrage/output_65_1.png" alt="png" /></p>
+
+<p>Results indicate the battery is operating within the prescribed limits of state of energy.</p>
+
+<h2 id="revenue-cost-and-profit">Revenue, cost, and profit</h2>
+
+<p>We’ll analyze the following financial indicators:</p>
+<ul>
+  <li>Total annual revenue generation ($)</li>
+  <li>Total annual charging cost ($)</li>
+</ul>
+
+<p>We’ll also look at the total annual discharged throughput (kWh) later. To examine all of these, it is convenient to put the data in a <code class="highlighter-rouge">DataFrame</code>.</p>
+
+<p>Select out a new <code class="highlighter-rouge">DataFrame</code> based on the time frame of simulation, to report further results:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="mi">2019</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">hour</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="s">'America/New_York'</span><span class="p">):</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="mi">2020</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">hour</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="s">'America/New_York'</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Check there is the right number of rows:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span><span class="o">.</span><span class="n">shape</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(8760, 5)
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">assert</span> <span class="n">all_data_sim_time</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_hourly_discharges</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Attach simulation results</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#These indicate flows during the hour of the datetime index
+</span><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Charging power (kW)'</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_hourly_charges</span>
+<span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Discharging power (kW)'</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_hourly_discharges</span>
+<span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Power output (kW)'</span><span class="p">]</span> <span class="o">=</span> \
+    <span class="n">all_hourly_discharges</span> <span class="o">-</span> <span class="n">all_hourly_charges</span>
+<span class="c1">#This is the state of power at the beginning of the hour of the datetime index 
+</span><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'State of Energy (kWh)'</span><span class="p">]</span> <span class="o">=</span> \
+    <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">initial_level</span><span class="p">,</span> <span class="n">all_hourly_state_of_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p>Revenue and cost would be in units of
+<script type="math/tex">\frac{\text{kW} \cdot \text{\$} \cdot \text{h}}{\text{MWh}} = 1000 \cdot \</script>$ , so divide by 1000 to adjust to $:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Revenue generation ($)'</span><span class="p">]</span> <span class="o">=</span> \
+<span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Discharging power (kW)'</span><span class="p">]</span> \
+<span class="o">*</span> <span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'LBMP ($/MWHr)'</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1000</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Charging cost ($)'</span><span class="p">]</span> <span class="o">=</span> \
+<span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Charging power (kW)'</span><span class="p">]</span> \
+<span class="o">*</span> <span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'LBMP ($/MWHr)'</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1000</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Profit ($)'</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Revenue generation ($)'</span><span class="p">]</span> \
+<span class="o">-</span> <span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Charging cost ($)'</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>What is the total annual revenue generation?</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Revenue generation ($)'</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2354.6574498602467
+</code></pre></div></div>
+
+<p>Total annual charging cost?</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Charging cost ($)'</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1391.6754123382877
+</code></pre></div></div>
+
+<p>Calculate profit</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Profit ($)'</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>962.9820375219592
+</code></pre></div></div>
+
+<p>So we could make a profit of nearly $963 by performing energy arbitrage.</p>
+
+<h2 id="total-annual-discharged-throughput">Total annual discharged throughput</h2>
+
+<p>How much energy has flowed through this battery during the course of the year? For some context here, the sum of daily discharged throughput is limited to 200 kWh/day. If the battery discharged its maximum possible energy every day during the 365 day simulation, the total discharge would be:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">365</span><span class="o">*</span><span class="mi">200</span>
+<span class="c1">#kWh
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>73000
+</code></pre></div></div>
+
+<p>And in fact it is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sum</span><span class="p">(</span><span class="n">all_daily_discharge_throughput</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>72955.00000394997
+</code></pre></div></div>
+
+<p>This implies the system is hitting the maximum discharged throughput limit on most days. We can check this by doing a <code class="highlighter-rouge">value_counts()</code> on the <code class="highlighter-rouge">Series</code> of daily throughput.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">all_daily_discharge_throughput</span><span class="o">.</span><span class="nb">round</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>200.0    364
+155.0      1
+dtype: int64
+</code></pre></div></div>
+
+<p>The battery operated at maximum throughput for all but one day.</p>
+
+<h2 id="find-the-most-profitable-week">Find the most profitable week</h2>
+<p>Group the profit column by week and locate the maximum:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">max_profit_week</span> <span class="o">=</span> <span class="p">(</span><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Profit ($)'</span><span class="p">]</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s">'W'</span><span class="p">)</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span> <span class="o">==</span> \
+<span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Profit ($)'</span><span class="p">]</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s">'W'</span><span class="p">)</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span><span class="o">.</span><span class="nb">max</span><span class="p">())</span><span class="o">.</span><span class="n">values</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Profit ($)'</span><span class="p">]</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s">'W'</span><span class="p">)</span><span class="o">.</span><span class="nb">sum</span><span class="p">()[</span><span class="n">max_profit_week</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Time Stamp
+2019-07-21 00:00:00-04:00    51.015471
+Freq: W-SUN, Name: Profit ($), dtype: float64
+</code></pre></div></div>
+
+<p>A week in July was the most profitable for energy arbitrage. For this week, let’s make a graph of hourly battery state of energy and hourly LBMP.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">"figure.figsize"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">"figure.dpi"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">150</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">"font.size"</span><span class="p">:</span><span class="mi">14</span><span class="p">})</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">most_profit_week_start</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span>
+    <span class="n">year</span><span class="o">=</span><span class="mi">2019</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="mi">21</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="s">'America/New_York'</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">all_data_sim_time</span><span class="p">[</span>
+    <span class="n">most_profit_week_start</span><span class="p">:</span><span class="n">most_profit_week_start</span><span class="o">+</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>\
+<span class="p">[[</span><span class="s">'State of Energy (kWh)'</span><span class="p">,</span> <span class="s">'LBMP ($/MWHr)'</span><span class="p">]]</span>\
+<span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">secondary_y</span><span class="o">=</span><span class="s">'LBMP ($/MWHr)'</span><span class="p">,</span> <span class="n">mark_right</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">'State of energy (kWh)'</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">right_ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">'LBMP ($/MWh)'</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">get_legend</span><span class="p">()</span><span class="o">.</span><span class="n">set_bbox_to_anchor</span><span class="p">((</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p><img src="/assets/images/2020-05-03-energy-arbitrage/output_99_0.png" alt="png" /></p>
+
+<p>The battery appears to follow the general arbitrage srategy of “buy low, sell high”, or in this case “charge cheaply, discharge discreetly” to take advantage of future price changes. It may be that during this week, it was quite warm in New York City, leading to high power demand for air conditioning, large price swings between day and night, and a good opportunity for our battery system to make some money.</p>
+
+<h2 id="monthly-profit">Monthly profit</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">"figure.figsize"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">"figure.dpi"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">"font.size"</span><span class="p">:</span><span class="mi">12</span><span class="p">})</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'Profit ($)'</span><span class="p">]</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s">'M'</span><span class="p">)</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">'Total monthly profit ($)'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0, 0.5, 'Total monthly profit ($)')
+</code></pre></div></div>
+
+<p><img src="/assets/images/2020-05-03-energy-arbitrage/output_103_1.png" alt="png" /></p>
+
+<p>Profit is mostly higher in the summer than winter, but is also high in January and December. A plot of the LBMP throughout the year sheds some light on this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_data_sim_time</span><span class="p">[</span><span class="s">'LBMP ($/MWHr)'</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">'LBMP ($/MWHr)'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0, 0.5, 'LBMP ($/MWHr)')
+</code></pre></div></div>
+
+<p><img src="/assets/images/2020-05-03-energy-arbitrage/output_105_1.png" alt="png" /></p>
+
+<p>Changes in price enable the arbitrage strategy to make profit. Generally, most of the larger price swings are during the summer months, probably reflecting increased demand due to air conditioning usage on hot summer days. But there are large price changes in November, December, and January. This may be due to tourism in New York City during the holiday season, or cold weather that increases demand for electricity for heating.</p>
+
+<h1 id="conclusions">Conclusions</h1>
+
+<p>We found that an energy arbitrage strategy for a grid-connected battery can be formulated using linear programming, assuming future prices are known over some time horizon. We showed that when operating under an illustrative set of system parameters and using real-world energy price data, such a system can generate an annual profit of $963.</p>
+
+<p>Further optimization for increased profit may be possible, if prices are able to be accurately predicted beyond the 36 hour optimization horizon used here. The NYISO price determination involves a load forecasting model, that depends on economic and weather factors. It may be possible to include such factors in a price forecasting model to estimate future day-ahead market prices that are not yet public. In another interesting direction, Wang and Zhang (2018) show that reinforcement learning using historical price data can lead to higher profits than maximizing instantaneous profit, suggesting other possible approaches to maximizing profit from energy arbitrage.</p>
+
+<p>I hope you found this post helpful for understanding how linear programming can be used to formulate an optimal arbitrage strategy if future prices are known.</p>
+
+<h3 id="references">References</h3>
+
+<p>All references were accessed on May 2, 2020.</p>
+
+<hr />
+
+<p>NYISO. <a href="https://www.nyiso.com/documents/20142/2923301/dayahd_schd_mnl.pdf/0024bc71-4dd9-fa80-a816-f9f3e26ea53a">Day-Ahead Scheduling Manual</a>.</p>
+
+<p>PJM Interconnection LLC. <a href="https://www.pjm.com/-/media/training/nerc-certifications/markets-exam-materials/mkt-optimization-wkshp/locational-marginal-pricing-components.ashx?la=en">Locational Marginal Pricing Components</a>.</p>
+
+<p>Salles, Mauricio B. C., et al. 2017. <a href="https://www.mdpi.com/1996-1073/10/8/1100/htm">Potential Arbitrage Revenue of Energy Storage Systems in PJM</a>. Energies 10:8.</p>
+
+<p>Sioshansi, Ramteen, et al. 2009. <a href="https://www.sciencedirect.com/science/article/pii/S0140988308001631">Estimating the Value of Electricity Storage in PJM: Arbitrage and Some Welfare Effects</a>. Energy Economics 31:2, 269-277.</p>
+
+<p>Wang, Hao and Zhang, Baosen, 2018. <a href="https://arxiv.org/abs/1711.03127">Energy Storage Arbitrage in Real-Time Markets via Reinforcement Learning</a>. IEEE PES General Meeting.</p>
+
+<hr />
+
+<p>I found this <a href="https://benalexkeen.com/linear-programming-with-python-and-pulp/">guide to getting started with linear programming in PuLP</a>, by Ben Alex Keen, to be very helpful.</p>
+
+  </div><a class="u-url" href="/energy-arbitrage/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Steve Klosterman</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Steve Klosterman</li><li><a class="u-email" href="mailto:steve.klosterman@gmail.com">steve.klosterman@gmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/klostest"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">klostest</span></a></li><li><a href="https://www.linkedin.com/in/stephenklosterman"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">stephenklosterman</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Data Science and Machine Learning</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

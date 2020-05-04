@@ -121,10 +121,10 @@ The objective function is specified by adding the decision variables to the mode
 
 Having defined the model and the objective, now we need to add the battery's operational constraints. The battery has limited capacity and so the optimization is subject to a battery storage constraint:
 
-$$ 0 <= \sum_{t_f = 1\text{pm of current day}}^{11\text{pm of next day}} \sum_{t=12\text{pm of current day}}^{t_f} s_{i} + \eta \cdot
+$$ 0 <= \sum_{t=12\text{pm of current day}}^{t_f} s_{i} + \eta \cdot
 c_t - d_t <= \text{discharge energy capacity (kWh)}$$
 
-where $$s_i$$ is the state of energy (kWh) of the battery at the start of the 36-hour optimization period and $$\eta$$ is the round-trip efficiency of the battery. This constraint requires the battery's state of energy (sum of initial state and hourly power flows) to be between zero, assuming the battery has complete depth of discharge capabilities, and the battery's discharge energy capacity, for each hour of the optimization horizon. In this constraint, the power flows (kW) are understood to be converted to units of energy (kWh) through multiplication by the one hour time step.
+where $$t_f$$ = each hour from 1pm on the current day through 11pm the next day, $$s_i$$ is the state of energy (kWh) of the battery at the start of the 36-hour optimization period and $$\eta$$ is the round-trip efficiency of the battery. This constraint requires the battery's state of energy (sum of initial state and hourly power flows) to be between zero, assuming the battery has complete depth of discharge capabilities, and the battery's discharge energy capacity, for each hour of the optimization horizon. In this constraint, the power flows (kW) are understood to be converted to units of energy (kWh) through multiplication by the one hour time step.
 
 In PuLP, constraints can be added to a model just like the objective function: using addition syntax. We can express these constraints by adding up the discharge flows using `lpSum`, and in the case of charge flows which need to be multiplied by efficiency, again an `LpAffineExpression`.
 

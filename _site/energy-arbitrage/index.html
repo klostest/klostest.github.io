@@ -159,10 +159,10 @@
 <p>Having defined the model and the objective, now we need to add the battery’s operational constraints. The battery has limited capacity and so the optimization is subject to a battery storage constraint:</p>
 
 <script type="math/tex; mode=display">% <![CDATA[
-0 <= \sum_{t_f = 1\text{pm of current day}}^{11\text{pm of next day}} \sum_{t=12\text{pm of current day}}^{t_f} s_{i} + \eta \cdot
+0 <= \sum_{t=12\text{pm of current day}}^{t_f} s_{i} + \eta \cdot
 c_t - d_t <= \text{discharge energy capacity (kWh)} %]]></script>
 
-<p>where <script type="math/tex">s_i</script> is the state of energy (kWh) of the battery at the start of the 36-hour optimization period and <script type="math/tex">\eta</script> is the round-trip efficiency of the battery. This constraint requires the battery’s state of energy (sum of initial state and hourly power flows) to be between zero, assuming the battery has complete depth of discharge capabilities, and the battery’s discharge energy capacity, for each hour of the optimization horizon. In this constraint, the power flows (kW) are understood to be converted to units of energy (kWh) through multiplication by the one hour time step.</p>
+<p>where <script type="math/tex">t_f</script> = each hour from 1pm on the current day through 11pm the next day, <script type="math/tex">s_i</script> is the state of energy (kWh) of the battery at the start of the 36-hour optimization period and <script type="math/tex">\eta</script> is the round-trip efficiency of the battery. This constraint requires the battery’s state of energy (sum of initial state and hourly power flows) to be between zero, assuming the battery has complete depth of discharge capabilities, and the battery’s discharge energy capacity, for each hour of the optimization horizon. In this constraint, the power flows (kW) are understood to be converted to units of energy (kWh) through multiplication by the one hour time step.</p>
 
 <p>In PuLP, constraints can be added to a model just like the objective function: using addition syntax. We can express these constraints by adding up the discharge flows using <code class="highlighter-rouge">lpSum</code>, and in the case of charge flows which need to be multiplied by efficiency, again an <code class="highlighter-rouge">LpAffineExpression</code>.</p>
 
@@ -1210,7 +1210,7 @@ Freq: W-SUN, Name: Profit ($), dtype: float64
 
 <p><img src="/assets/images/2020-05-03-energy-arbitrage/output_99_0.png" alt="png" /></p>
 
-<p>The battery appears to follow the general arbitrage srategy of “buy low, sell high”, or in this case “charge cheaply, discharge discreetly” to take advantage of future price changes. It may be that during this week, it was quite warm in New York City, leading to high power demand for air conditioning, large price swings between day and night, and a good opportunity for our battery system to make some money.</p>
+<p>The battery appears to follow the general arbitrage strategy of “buy low, sell high”, or in this case “charge cheaply, discharge discreetly” to take advantage of future price changes. It may be that during this week, it was quite warm in New York City, leading to high power demand for air conditioning, large price swings between day and night, and a good opportunity for our battery system to make some money.</p>
 
 <h2 id="monthly-profit">Monthly profit</h2>
 

@@ -30,6 +30,8 @@ Please let me know if you find errors, or have a question or other feedback, by 
 | Page # (print edition) | Paragraph | Error 
 |:-:|:-:|:-:
 | 2 | Last paragraph | "index-1" should be "index -1", i.e. with a space before "-1".
+| 45 | Code example | `f_clean_2.groupby('EDUCATION')...` should be `df_clean_2.groupby('EDUCATION')...`
+| 61 | Link in __Note__ | The link is incorrect, it should be [http://bit.ly/2W9cwPH](http://bit.ly/2W9cwPH)
 | 239 | 2nd code example | `cross_ent = -1*((pm0*np.log(pm0)) + (mp1*np.log(mp1)))` should be `cross_ent = -1*((pm0*np.log(pm0)) + (pm1*np.log(pm1)))`. In other words `mp1` should be `pm1` here.
 
 # Q&A

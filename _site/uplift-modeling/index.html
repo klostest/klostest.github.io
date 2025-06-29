@@ -2,9 +2,9 @@
 <html lang="en"><head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.0 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>Supercharging customer touchpoints with uplift modeling | Steve Klosterman</title>
-<meta name="generator" content="Jekyll v3.8.5" />
+<meta name="generator" content="Jekyll v4.4.1" />
 <meta property="og:title" content="Supercharging customer touchpoints with uplift modeling" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Data Science and Machine Learning" />
@@ -14,8 +14,10 @@
 <meta property="og:site_name" content="Steve Klosterman" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2020-07-08T00:00:00-07:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Supercharging customer touchpoints with uplift modeling" />
 <script type="application/ld+json">
-{"description":"Data Science and Machine Learning","@type":"BlogPosting","url":"http://localhost:4000/uplift-modeling/","headline":"Supercharging customer touchpoints with uplift modeling","dateModified":"2020-07-08T00:00:00-07:00","datePublished":"2020-07-08T00:00:00-07:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/uplift-modeling/"},"@context":"https://schema.org"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2020-07-08T00:00:00-07:00","datePublished":"2020-07-08T00:00:00-07:00","description":"Data Science and Machine Learning","headline":"Supercharging customer touchpoints with uplift modeling","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/uplift-modeling/"},"url":"http://localhost:4000/uplift-modeling/"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Steve Klosterman" /></head>
 <body><header class="site-header" role="banner">
@@ -35,10 +37,7 @@
 </header>
 <main class="page-content" aria-label="Content">
       <div class="wrapper">
-        
-
-
-<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Supercharging customer touchpoints with uplift modeling</h1>
@@ -131,20 +130,20 @@
 <p>Let’s explore these concepts using an example dataset, by building an S-Learner model and evaluating it.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># load packages
-</span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+</span><span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="n">pandas</span> <span class="k">as</span> <span class="n">pd</span>
 
-<span class="kn">from</span> <span class="nn">statsmodels.stats.proportion</span> <span class="kn">import</span> <span class="n">proportions_ztest</span>
+<span class="kn">from</span> <span class="n">statsmodels.stats.proportion</span> <span class="kn">import</span> <span class="n">proportions_ztest</span>
 
-<span class="kn">import</span> <span class="nn">sklearn</span> <span class="k">as</span> <span class="n">sk</span>
-<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">auc</span>
-<span class="kn">import</span> <span class="nn">xgboost</span> <span class="k">as</span> <span class="n">xgb</span>
+<span class="kn">import</span> <span class="n">sklearn</span> <span class="k">as</span> <span class="n">sk</span>
+<span class="kn">from</span> <span class="n">sklearn.metrics</span> <span class="kn">import</span> <span class="n">auc</span>
+<span class="kn">import</span> <span class="n">xgboost</span> <span class="k">as</span> <span class="n">xgb</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="n">mpl</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">import</span> <span class="n">matplotlib</span> <span class="k">as</span> <span class="n">mpl</span>
+<span class="kn">import</span> <span class="n">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 
-<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="n">pickle</span>
 </code></pre></div></div>
 
 <h1 id="example-dataset-">Example dataset <a class="anchor" id="Example"></a></h1>
@@ -152,17 +151,17 @@
 
 <p>Here we use synthetic data from a recent publication (Zhao et al. 2020), which are publicly available <a href="https://zenodo.org/record/3653141#.XwEVz5NKjYU">here</a>. These data simulate a designed experiment with an even split between treatment and control groups. We load only the first 10,000 rows from this dataset, which is the first of “100 trials (replicates with different random seeds)”. The dataset is constructed so that some features are predictive of the outcome, some are uninformative, and some are predictive of the treatment effect specifically.</p>
 
-<p>The columns we’re interested in are <code class="highlighter-rouge">treatment_group_key</code>, which identifies whether or not the customer received treatment, <code class="highlighter-rouge">conversion</code> which is 1 if the customer made a purchase and 0 if not, and the 36 synthetic features which all start with <code class="highlighter-rouge">x</code>. In real data, the features may correspond to such things as customer purchase history, demographics, and other quantities a data scientist may engineer with the hypothesis that they would be useful in modeling uplift.</p>
+<p>The columns we’re interested in are <code class="language-plaintext highlighter-rouge">treatment_group_key</code>, which identifies whether or not the customer received treatment, <code class="language-plaintext highlighter-rouge">conversion</code> which is 1 if the customer made a purchase and 0 if not, and the 36 synthetic features which all start with <code class="language-plaintext highlighter-rouge">x</code>. In real data, the features may correspond to such things as customer purchase history, demographics, and other quantities a data scientist may engineer with the hypothesis that they would be useful in modeling uplift.</p>
 
 <p>Let’s load the data and briefly explore it.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">'data/uplift_synthetic_data_100trials.csv'</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="nf">read_csv</span><span class="p">(</span><span class="sh">'</span><span class="s">data/uplift_synthetic_data_100trials.csv</span><span class="sh">'</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">.</span><span class="nf">info</span><span class="p">()</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
 RangeIndex: 10000 entries, 0 to 9999
 Data columns (total 43 columns):
  #   Column                      Non-Null Count  Dtype  
@@ -183,7 +182,7 @@ dtypes: float64(39), int64(3), object(1)
 memory usage: 3.3+ MB
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">.</span><span class="nf">head</span><span class="p">()</span>
 </code></pre></div></div>
 
 <div>
@@ -355,33 +354,33 @@ memory usage: 3.3+ MB
 
 <p>Of these 10,000 records, how many are in the treatment group, and how many are in the control group?</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">].</span><span class="nf">value_counts</span><span class="p">()</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>control       5000
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>control       5000
 treatment1    5000
 Name: treatment_group_key, dtype: int64
 </code></pre></div></div>
 
 <p>There is a 50/50 split. Let’s encode the treatment variable as a binary 0/1:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span><span class="o">.</span><span class="nb">map</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="p">{</span><span class="s">'control'</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s">'treatment1'</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">].</span><span class="nf">map</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="p">{</span><span class="sh">'</span><span class="s">control</span><span class="sh">'</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="sh">'</span><span class="s">treatment1</span><span class="sh">'</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
 </code></pre></div></div>
 
 <h1 id="analyze-experimental-results-">Analyze experimental results <a class="anchor" id="Analyze"></a></h1>
 
 <p>What was the overall conversion rate?</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">[</span><span class="s">'conversion'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">[</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">].</span><span class="nf">mean</span><span class="p">()</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0.3191
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0.3191
 </code></pre></div></div>
 
 <p>What’s the conversion rate in the treatment group versus the control group?</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">exp_results_df</span> <span class="o">=</span> \
-<span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s">'treatment_group_key'</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="s">'conversion'</span><span class="p">:[</span><span class="s">'mean'</span><span class="p">,</span> <span class="s">'sum'</span><span class="p">,</span> <span class="s">'count'</span><span class="p">]})</span>
+<span class="n">df</span><span class="p">.</span><span class="nf">groupby</span><span class="p">(</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">).</span><span class="nf">agg</span><span class="p">({</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">:[</span><span class="sh">'</span><span class="s">mean</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">sum</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">count</span><span class="sh">'</span><span class="p">]})</span>
 <span class="n">exp_results_df</span>
 </code></pre></div></div>
 
@@ -439,22 +438,22 @@ Name: treatment_group_key, dtype: int64
 </table>
 </div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="n">exp_results_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">,(</span><span class="s">'conversion'</span><span class="p">,</span> <span class="s">'mean'</span><span class="p">)]</span>
- <span class="o">-</span> <span class="n">exp_results_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,(</span><span class="s">'conversion'</span><span class="p">,</span> <span class="s">'mean'</span><span class="p">)])</span><span class="o">.</span><span class="nb">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="n">exp_results_df</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">,(</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">mean</span><span class="sh">'</span><span class="p">)]</span>
+ <span class="o">-</span> <span class="n">exp_results_df</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,(</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">mean</span><span class="sh">'</span><span class="p">)]).</span><span class="nf">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0.1042
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0.1042
 </code></pre></div></div>
 
 <p>There is a substantially higher conversion rate in the treatment group (37%) than the control group (27%), indicating the treatment is effective at encouraging conversion: the ATE is positive and is about 10%.</p>
 
 <p>Often in real data the difference is not so large and a significance test is usually conducted to determine the result of the A/B test.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">proportions_ztest</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="n">exp_results_df</span><span class="p">[(</span><span class="s">'conversion'</span><span class="p">,</span> <span class="s">'sum'</span><span class="p">)],</span>
-                  <span class="n">nobs</span><span class="o">=</span><span class="n">exp_results_df</span><span class="p">[(</span><span class="s">'conversion'</span><span class="p">,</span> <span class="s">'count'</span><span class="p">)])</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">proportions_ztest</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="n">exp_results_df</span><span class="p">[(</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">sum</span><span class="sh">'</span><span class="p">)],</span>
+                  <span class="n">nobs</span><span class="o">=</span><span class="n">exp_results_df</span><span class="p">[(</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">count</span><span class="sh">'</span><span class="p">)])</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(-11.177190529878043, 5.273302441543889e-29)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(-11.177190529878043, 5.273302441543889e-29)
 </code></pre></div></div>
 
 <p>The p-value is the second quantity returned from the proportion test and is much smaller than 0.05, or pretty much any other threshold used to decide significance. So we know there’s a significant ATE. This is the typical starting point for uplift modeling. If we were to have observed that the treatment did not increase conversion rate, while theoretically it may be possible to find a persuadable segment of customers using uplift modeling, in practice it may not be a worthwhile endeavor. This likely depends on the specific problem at hand.</p>
@@ -462,34 +461,34 @@ Name: treatment_group_key, dtype: int64
 <p>However in our case, having observed a substantial treatment effect, we proceed to use uplift modeling to find the CATE, and see if we can identify those persuadables.</p>
 
 <h1 id="build-an-uplift-model-">Build an uplift model <a class="anchor" id="Build"></a></h1>
-<p>Here I’ll use an <code class="highlighter-rouge">XGBClassifier</code> to train an S-Learner; that is, a single model including all the features, where the treatment indicator is also a feature. I’ll split the data into training and validation sets (80/20 split), for early stopping. I’ll also use the validation set to illustrate model evaluation metrics. In a real project, a held out test set should be reserved from this process, where the evaluation metrics on the test set would be used for final evaluation of the model.</p>
+<p>Here I’ll use an <code class="language-plaintext highlighter-rouge">XGBClassifier</code> to train an S-Learner; that is, a single model including all the features, where the treatment indicator is also a feature. I’ll split the data into training and validation sets (80/20 split), for early stopping. I’ll also use the validation set to illustrate model evaluation metrics. In a real project, a held out test set should be reserved from this process, where the evaluation metrics on the test set would be used for final evaluation of the model.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">train</span><span class="p">,</span> <span class="n">valid</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">train_test_split</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">train</span><span class="p">,</span> <span class="n">valid</span> <span class="o">=</span> <span class="n">sk</span><span class="p">.</span><span class="n">model_selection</span><span class="p">.</span><span class="nf">train_test_split</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">print</span><span class="p">(</span><span class="n">train</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">valid</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">print</span><span class="p">(</span><span class="n">train</span><span class="p">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">valid</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(8000, 43) (2000, 43)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(8000, 43) (2000, 43)
 </code></pre></div></div>
 
 <p>Specify the features as a list. This includes the treatment column and all features, which are the 8th column onward:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span> <span class="o">+</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">7</span><span class="p">:]</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">]</span> <span class="o">+</span> <span class="n">df</span><span class="p">.</span><span class="n">columns</span><span class="p">.</span><span class="nf">tolist</span><span class="p">()[</span><span class="mi">7</span><span class="p">:]</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">print</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">print</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>['treatment_group_key', 'x1_informative', 'x2_informative', 'x3_informative', 'x4_informative', 'x5_informative', 'x6_informative', 'x7_informative', 'x8_informative', 'x9_informative', 'x10_informative', 'x11_irrelevant', 'x12_irrelevant', 'x13_irrelevant', 'x14_irrelevant', 'x15_irrelevant', 'x16_irrelevant', 'x17_irrelevant', 'x18_irrelevant', 'x19_irrelevant', 'x20_irrelevant', 'x21_irrelevant', 'x22_irrelevant', 'x23_irrelevant', 'x24_irrelevant', 'x25_irrelevant', 'x26_irrelevant', 'x27_irrelevant', 'x28_irrelevant', 'x29_irrelevant', 'x30_irrelevant', 'x31_uplift_increase', 'x32_uplift_increase', 'x33_uplift_increase', 'x34_uplift_increase', 'x35_uplift_increase', 'x36_uplift_increase']
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>['treatment_group_key', 'x1_informative', 'x2_informative', 'x3_informative', 'x4_informative', 'x5_informative', 'x6_informative', 'x7_informative', 'x8_informative', 'x9_informative', 'x10_informative', 'x11_irrelevant', 'x12_irrelevant', 'x13_irrelevant', 'x14_irrelevant', 'x15_irrelevant', 'x16_irrelevant', 'x17_irrelevant', 'x18_irrelevant', 'x19_irrelevant', 'x20_irrelevant', 'x21_irrelevant', 'x22_irrelevant', 'x23_irrelevant', 'x24_irrelevant', 'x25_irrelevant', 'x26_irrelevant', 'x27_irrelevant', 'x28_irrelevant', 'x29_irrelevant', 'x30_irrelevant', 'x31_uplift_increase', 'x32_uplift_increase', 'x33_uplift_increase', 'x34_uplift_increase', 'x35_uplift_increase', 'x36_uplift_increase']
 </code></pre></div></div>
 
 <p>Assemble the training and validation sets for training the XGBoost classifer:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">X_train</span> <span class="o">=</span> <span class="n">train</span><span class="p">[</span><span class="n">features</span><span class="p">]</span>
-<span class="n">y_train</span> <span class="o">=</span> <span class="n">train</span><span class="p">[</span><span class="s">'conversion'</span><span class="p">]</span>
+<span class="n">y_train</span> <span class="o">=</span> <span class="n">train</span><span class="p">[</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">]</span>
 <span class="n">X_valid</span> <span class="o">=</span> <span class="n">valid</span><span class="p">[</span><span class="n">features</span><span class="p">]</span>
-<span class="n">y_valid</span> <span class="o">=</span> <span class="n">valid</span><span class="p">[</span><span class="s">'conversion'</span><span class="p">]</span>
+<span class="n">y_valid</span> <span class="o">=</span> <span class="n">valid</span><span class="p">[</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">]</span>
 </code></pre></div></div>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">eval_set</span> <span class="o">=</span> <span class="p">[(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="p">(</span><span class="n">X_valid</span><span class="p">,</span> <span class="n">y_valid</span><span class="p">)]</span>
@@ -498,10 +497,10 @@ Name: treatment_group_key, dtype: int64
 <p>Now it’s time to instantiate and train the model.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Train an xgboost model
-</span><span class="n">model</span> <span class="o">=</span> <span class="n">xgb</span><span class="o">.</span><span class="n">XGBClassifier</span><span class="p">(</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+</span><span class="n">model</span> <span class="o">=</span> <span class="n">xgb</span><span class="p">.</span><span class="nc">XGBClassifier</span><span class="p">(</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
                           <span class="n">max_depth</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>
                           <span class="n">min_child_weight</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
-                          <span class="n">objective</span> <span class="o">=</span> <span class="s">'binary:logistic'</span><span class="p">,</span>
+                          <span class="n">objective</span> <span class="o">=</span> <span class="sh">'</span><span class="s">binary:logistic</span><span class="sh">'</span><span class="p">,</span>
                           <span class="n">seed</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
                           <span class="n">gamma</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
                           <span class="n">silent</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
@@ -509,11 +508,11 @@ Name: treatment_group_key, dtype: int64
 </code></pre></div></div>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%%</span><span class="n">time</span>
-<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="o">=</span><span class="n">eval_set</span><span class="p">,</span>\
-          <span class="n">eval_metric</span><span class="o">=</span><span class="s">"auc"</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">early_stopping_rounds</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">model</span><span class="p">.</span><span class="nf">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="o">=</span><span class="n">eval_set</span><span class="p">,</span>\
+          <span class="n">eval_metric</span><span class="o">=</span><span class="sh">"</span><span class="s">auc</span><span class="sh">"</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">early_stopping_rounds</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[0]	validation_0-auc:0.693049	validation_1-auc:0.648941
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[0]	validation_0-auc:0.693049	validation_1-auc:0.648941
 Multiple eval metrics have been passed: 'validation_1-auc' will be used for early stopping.
 
 Will train until validation_1-auc hasn't improved in 30 rounds.
@@ -540,27 +539,27 @@ XGBClassifier(base_score=0.5, booster='gbtree', colsample_bylevel=1,
 
 <p>The training process completes and we can see the model has a fairly high validation AUC. The training AUC is even higher than this, meaning technically the model is overfit. Normally I’d do a hyperparameter search, but I found the values used here to provide sensible results for the purpose of illustrating uplift modeling with this dataset.</p>
 
-<p>As a practical side note, I’ve found that in some cases, when using a T-Learner (not shown here), that overfitting to the training set can cause unexpected results when calculating uplift. In my experience the issue could be remedied by decreasing <code class="highlighter-rouge">max_depth</code> or increasing <code class="highlighter-rouge">min_child_weight</code> in the <code class="highlighter-rouge">XGBClassifier</code>, in other words decreasing the amount of overfitting.</p>
+<p>As a practical side note, I’ve found that in some cases, when using a T-Learner (not shown here), that overfitting to the training set can cause unexpected results when calculating uplift. In my experience the issue could be remedied by decreasing <code class="language-plaintext highlighter-rouge">max_depth</code> or increasing <code class="language-plaintext highlighter-rouge">min_child_weight</code> in the <code class="language-plaintext highlighter-rouge">XGBClassifier</code>, in other words decreasing the amount of overfitting.</p>
 
 <p>Another point to consider in model building is feature selection, which I’ve omitted here. In the context of uplift modeling, one could use the uplift model evaluation metrics introduced below on a validation set as a way to select features, for example by recursive feature elimination. Feature selection for uplift models is also the topic of recent research, including the paper that is the source of the dataset used here (Zhao et al. 2020).</p>
 
 <h1 id="model-evaluation-">Model evaluation <a class="anchor" id="Model-evaluation"></a></h1>
 <p>Now, we have our uplift model. The model building for an S-Learner is pretty simple, if you are already familiar with binary classification. To actually calculate the uplift for a given data set, with this approach we need to score the model twice, once with treatment = 1 and again with treatment = 0, then subtract these to get the uplift. Here we do this for the validation set, then plot a histogram of the uplift scores.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">X_valid_0</span> <span class="o">=</span> <span class="n">X_valid</span><span class="o">.</span><span class="n">copy</span><span class="p">();</span> <span class="n">X_valid_0</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="n">X_valid_1</span> <span class="o">=</span> <span class="n">X_valid</span><span class="o">.</span><span class="n">copy</span><span class="p">();</span> <span class="n">X_valid_1</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">Uplift</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_valid_1</span><span class="p">)[:,</span><span class="mi">1</span><span class="p">]</span>\
-    <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_valid_0</span><span class="p">)[:,</span><span class="mi">1</span><span class="p">]</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">X_valid_0</span> <span class="o">=</span> <span class="n">X_valid</span><span class="p">.</span><span class="nf">copy</span><span class="p">();</span> <span class="n">X_valid_0</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">X_valid_1</span> <span class="o">=</span> <span class="n">X_valid</span><span class="p">.</span><span class="nf">copy</span><span class="p">();</span> <span class="n">X_valid_1</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">Uplift</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="nf">predict_proba</span><span class="p">(</span><span class="n">X_valid_1</span><span class="p">)[:,</span><span class="mi">1</span><span class="p">]</span>\
+    <span class="o">-</span> <span class="n">model</span><span class="p">.</span><span class="nf">predict_proba</span><span class="p">(</span><span class="n">X_valid_0</span><span class="p">)[:,</span><span class="mi">1</span><span class="p">]</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">'figure.dpi'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
-<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">'figure.figsize'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">Uplift</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'Uplift score'</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">'Number of observations in validation set'</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">mpl</span><span class="p">.</span><span class="n">rcParams</span><span class="p">[</span><span class="sh">'</span><span class="s">figure.dpi</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">mpl</span><span class="p">.</span><span class="n">rcParams</span><span class="p">[</span><span class="sh">'</span><span class="s">figure.figsize</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">hist</span><span class="p">(</span><span class="n">Uplift</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xlabel</span><span class="p">(</span><span class="sh">'</span><span class="s">Uplift score</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylabel</span><span class="p">(</span><span class="sh">'</span><span class="s">Number of observations in validation set</span><span class="sh">'</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0, 0.5, 'Number of observations in validation set')
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0, 0.5, 'Number of observations in validation set')
 </code></pre></div></div>
 
 <p><img src="/assets/images/2020-07-08-uplift-modeling/output_38_1.png" alt="png" /></p>
@@ -573,25 +572,25 @@ XGBClassifier(base_score=0.5, booster='gbtree', colsample_bylevel=1,
 <p>A popular way to evaluate an uplift model is with a quantile chart. This will give a quick visual impression of whether the model is “working”, in the sense of sloping true uplift. To create the quantile chart, we start with the uplift predictions for our validation set, and bin the instances into quantiles based on these scores. The number of quantiles depends on how much data we have, although 10 is a pretty typical number in practice (deciles). Then, within each bin, we’ll find the difference in conversion rate for those who were in the treatment group and those who were in the control group. If the model is working well, we should see a larger positive difference in the highest decile, decreasing to a small or negative difference in the lowest decile (i.e. treatment rate similar to control rate, or lower than control rate). In other words, as predicted uplift increases, the true uplift from control to treatment group should increase as well.</p>
 
 <h3 id="get-score-quantiles-">Get score quantiles <a class="anchor" id="get-quantiles"></a></h3>
-<p>Create a new <code class="highlighter-rouge">DataFrame</code> from the validation data, to add the uplift scores and quantiles.</p>
+<p>Create a new <code class="language-plaintext highlighter-rouge">DataFrame</code> from the validation data, to add the uplift scores and quantiles.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Uplift</span><span class="o">.</span><span class="n">shape</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Uplift</span><span class="p">.</span><span class="n">shape</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(2000,)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(2000,)
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">valid</span><span class="o">.</span><span class="n">shape</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">valid</span><span class="p">.</span><span class="n">shape</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(2000, 43)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(2000, 43)
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">valid_w_score</span> <span class="o">=</span> <span class="n">valid</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">valid_w_score</span><span class="p">[</span><span class="s">'Uplift score'</span><span class="p">]</span> <span class="o">=</span> <span class="n">Uplift</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">valid_w_score</span> <span class="o">=</span> <span class="n">valid</span><span class="p">.</span><span class="nf">copy</span><span class="p">()</span>
+<span class="n">valid_w_score</span><span class="p">[</span><span class="sh">'</span><span class="s">Uplift score</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">Uplift</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">valid_w_score</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">valid_w_score</span><span class="p">.</span><span class="nf">head</span><span class="p">()</span>
 </code></pre></div></div>
 
 <div>
@@ -763,10 +762,10 @@ XGBClassifier(base_score=0.5, booster='gbtree', colsample_bylevel=1,
 
 <p>Check that the treatment and control groups are approximately balanced, overall for the validation set (they should be since we used a random training/validation split but it’s always good to check):</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">valid_w_score</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">valid_w_score</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">].</span><span class="nf">value_counts</span><span class="p">()</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0    1011
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0    1011
 1     989
 Name: treatment_group_key, dtype: int64
 </code></pre></div></div>
@@ -774,18 +773,18 @@ Name: treatment_group_key, dtype: int64
 <p>Now, using the entire validation set (treatment and control groups together), make labels for the uplift score quantiles. We’ll check that the treatment and control groups are balanced within the quantiles, since we’ll be splitting the data by quantile and treatment to create the chart. Pandas has a convenient function to produce a series of labels according to which quantile an observation in the input series belongs to.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">score_quantiles</span><span class="p">,</span> <span class="n">score_quantile_bins</span> <span class="o">=</span> \
-<span class="n">pd</span><span class="o">.</span><span class="n">qcut</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">valid_w_score</span><span class="p">[</span><span class="s">'Uplift score'</span><span class="p">],</span>
+<span class="n">pd</span><span class="p">.</span><span class="nf">qcut</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">valid_w_score</span><span class="p">[</span><span class="sh">'</span><span class="s">Uplift score</span><span class="sh">'</span><span class="p">],</span>
         <span class="n">q</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
         <span class="n">retbins</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-        <span class="n">duplicates</span><span class="o">=</span><span class="s">'drop'</span><span class="p">)</span>
+        <span class="n">duplicates</span><span class="o">=</span><span class="sh">'</span><span class="s">drop</span><span class="sh">'</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>From this function we get a column indicating which quantile each instance belongs to, represented by the bin edges:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">score_quantiles</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">score_quantiles</span><span class="p">.</span><span class="nf">head</span><span class="p">()</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>6252    (-0.00339, 0.0186]
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>6252    (-0.00339, 0.0186]
 4684    (-0.114, -0.00339]
 1731        (0.201, 0.398]
 4742        (0.121, 0.148]
@@ -794,11 +793,11 @@ Name: Uplift score, dtype: category
 Categories (10, interval[float64]): [(-0.114, -0.00339] &lt; (-0.00339, 0.0186] &lt; (0.0186, 0.0391] &lt; (0.0391, 0.0548] ... (0.0941, 0.121] &lt; (0.121, 0.148] &lt; (0.148, 0.201] &lt; (0.201, 0.398]]
 </code></pre></div></div>
 
-<p>We also get a list of all bin edges in <code class="highlighter-rouge">score_quantile_bins</code>, but we don’t need it here. Now let’s add the score quantile to the dataframe so we can use it for analysis.</p>
+<p>We also get a list of all bin edges in <code class="language-plaintext highlighter-rouge">score_quantile_bins</code>, but we don’t need it here. Now let’s add the score quantile to the dataframe so we can use it for analysis.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">valid_w_score</span><span class="p">[</span><span class="s">'Quantile bin'</span><span class="p">]</span> <span class="o">=</span> <span class="n">score_quantiles</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">valid_w_score</span><span class="p">[</span><span class="sh">'</span><span class="s">Quantile bin</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">score_quantiles</span>
 <span class="n">valid_w_score</span><span class="p">[[</span>
-    <span class="s">'treatment_group_key'</span><span class="p">,</span> <span class="s">'conversion'</span><span class="p">,</span> <span class="s">'Uplift score'</span><span class="p">,</span> <span class="s">'Quantile bin'</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">Uplift score</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">Quantile bin</span><span class="sh">'</span><span class="p">]].</span><span class="nf">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 </code></pre></div></div>
 
 <div>
@@ -902,9 +901,9 @@ Categories (10, interval[float64]): [(-0.114, -0.00339] &lt; (-0.00339, 0.0186] 
 
 <p>Check that the number of treated and control observations within quantile bins are similar, using groupby/count and some multiindex magic:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">count_by_quantile_and_treatment</span> <span class="o">=</span> <span class="n">valid_w_score</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span>
-    <span class="p">[</span><span class="s">'Quantile bin'</span><span class="p">,</span> <span class="s">'treatment_group_key'</span><span class="p">])[</span><span class="s">'treatment_group_key'</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
-<span class="n">count_by_quantile_and_treatment</span> <span class="o">=</span> <span class="n">count_by_quantile_and_treatment</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">count_by_quantile_and_treatment</span> <span class="o">=</span> <span class="n">valid_w_score</span><span class="p">.</span><span class="nf">groupby</span><span class="p">(</span>
+    <span class="p">[</span><span class="sh">'</span><span class="s">Quantile bin</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">])[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">].</span><span class="nf">count</span><span class="p">()</span>
+<span class="n">count_by_quantile_and_treatment</span> <span class="o">=</span> <span class="n">count_by_quantile_and_treatment</span><span class="p">.</span><span class="nf">unstack</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">count_by_quantile_and_treatment</span>
 </code></pre></div></div>
 
@@ -990,11 +989,11 @@ Categories (10, interval[float64]): [(-0.114, -0.00339] &lt; (-0.00339, 0.0186] 
 </table>
 </div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">count_by_quantile_and_treatment</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">barh</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'Number of observations'</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">count_by_quantile_and_treatment</span><span class="p">.</span><span class="n">plot</span><span class="p">.</span><span class="nf">barh</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xlabel</span><span class="p">(</span><span class="sh">'</span><span class="s">Number of observations</span><span class="sh">'</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0.5, 0, 'Number of observations')
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0.5, 0, 'Number of observations')
 </code></pre></div></div>
 
 <p><img src="/assets/images/2020-07-08-uplift-modeling/output_56_1.png" alt="png" /></p>
@@ -1005,24 +1004,24 @@ Categories (10, interval[float64]): [(-0.114, -0.00339] &lt; (-0.00339, 0.0186] 
 
 <p>On to the uplift quantile chart. We’ll start by creating a mask we can use for the treatment group:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">validation_treatment_mask</span> <span class="o">=</span> <span class="n">valid_w_score</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">validation_treatment_mask</span> <span class="o">=</span> <span class="n">valid_w_score</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
 </code></pre></div></div>
 
 <p>Then we get the conversion rates within uplift score quantiles, separately for treatment and control groups:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">treatment_by_quantile</span> <span class="o">=</span> <span class="n">valid_w_score</span><span class="p">[</span><span class="n">validation_treatment_mask</span><span class="p">]</span>\
-    <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s">'Quantile bin'</span><span class="p">)[</span><span class="s">'conversion'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">groupby</span><span class="p">(</span><span class="sh">'</span><span class="s">Quantile bin</span><span class="sh">'</span><span class="p">)[</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">].</span><span class="nf">mean</span><span class="p">()</span>
 <span class="n">control_by_quantile</span> <span class="o">=</span> <span class="n">valid_w_score</span><span class="p">[</span><span class="o">~</span><span class="n">validation_treatment_mask</span><span class="p">]</span>\
-    <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s">'Quantile bin'</span><span class="p">)[</span><span class="s">'conversion'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="p">.</span><span class="nf">groupby</span><span class="p">(</span><span class="sh">'</span><span class="s">Quantile bin</span><span class="sh">'</span><span class="p">)[</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">].</span><span class="nf">mean</span><span class="p">()</span>
 </code></pre></div></div>
 
 <p>Finally we calculate their difference, which is the true uplift within each score quantile.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">true_uplift_by_quantile</span> <span class="o">=</span> <span class="n">treatment_by_quantile</span> <span class="o">-</span> <span class="n">control_by_quantile</span>
-<span class="n">true_uplift_by_quantile</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">true_uplift_by_quantile</span><span class="p">.</span><span class="nf">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Quantile bin
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Quantile bin
 (-0.114, -0.00339]   -0.017486
 (-0.00339, 0.0186]    0.034343
 (0.0186, 0.0391]     -0.004600
@@ -1033,11 +1032,11 @@ Name: conversion, dtype: float64
 
 <p>Now we have all the information needed to plot an uplift quantile chart.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">true_uplift_by_quantile</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">barh</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'True uplift'</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">true_uplift_by_quantile</span><span class="p">.</span><span class="n">plot</span><span class="p">.</span><span class="nf">barh</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xlabel</span><span class="p">(</span><span class="sh">'</span><span class="s">True uplift</span><span class="sh">'</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0.5, 0, 'True uplift')
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0.5, 0, 'True uplift')
 </code></pre></div></div>
 
 <p><img src="/assets/images/2020-07-08-uplift-modeling/output_64_1.png" alt="png" /></p>
@@ -1053,11 +1052,11 @@ Name: conversion, dtype: float64
 <p>While the uplift quantile chart provides a qualitative snapshot telling us whether the model is effective at segmenting customers or not, we can go a step further in this direction and ask how accurate the model is at predicting uplift. This is the process of calibration, for which we’ll need the average predicted uplift within the score quantiles:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">predicted_uplift_by_quantile</span> <span class="o">=</span> <span class="n">valid_w_score</span>\
-    <span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s">'Quantile bin'</span><span class="p">])[</span><span class="s">'Uplift score'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-<span class="n">predicted_uplift_by_quantile</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+    <span class="p">.</span><span class="nf">groupby</span><span class="p">([</span><span class="sh">'</span><span class="s">Quantile bin</span><span class="sh">'</span><span class="p">])[</span><span class="sh">'</span><span class="s">Uplift score</span><span class="sh">'</span><span class="p">].</span><span class="nf">mean</span><span class="p">()</span>
+<span class="n">predicted_uplift_by_quantile</span><span class="p">.</span><span class="nf">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Quantile bin
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Quantile bin
 (-0.114, -0.00339]   -0.035133
 (-0.00339, 0.0186]    0.008385
 (0.0186, 0.0391]      0.029582
@@ -1066,24 +1065,24 @@ Name: conversion, dtype: float64
 Name: Uplift score, dtype: float32
 </code></pre></div></div>
 
-<p>We’ll put this together in a <code class="highlighter-rouge">DataFrame</code> with the true uplift that we calculated above, to create a scatter plot. If the uplift predictions are accurate, a scatter plot of predicted and true uplift should lie close to the one-one line.</p>
+<p>We’ll put this together in a <code class="language-plaintext highlighter-rouge">DataFrame</code> with the true uplift that we calculated above, to create a scatter plot. If the uplift predictions are accurate, a scatter plot of predicted and true uplift should lie close to the one-one line.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pred_true_uplift</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s">'Predicted Uplift'</span><span class="p">:</span><span class="n">predicted_uplift_by_quantile</span><span class="p">,</span>
-                                 <span class="s">'True Uplift'</span><span class="p">:</span><span class="n">true_uplift_by_quantile</span><span class="p">})</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pred_true_uplift</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="nc">DataFrame</span><span class="p">({</span><span class="sh">'</span><span class="s">Predicted Uplift</span><span class="sh">'</span><span class="p">:</span><span class="n">predicted_uplift_by_quantile</span><span class="p">,</span>
+                                 <span class="sh">'</span><span class="s">True Uplift</span><span class="sh">'</span><span class="p">:</span><span class="n">true_uplift_by_quantile</span><span class="p">})</span>
 
-<span class="n">min_on_plot</span> <span class="o">=</span> <span class="n">pred_true_uplift</span><span class="o">.</span><span class="nb">min</span><span class="p">()</span><span class="o">.</span><span class="nb">min</span><span class="p">()</span>
-<span class="n">max_on_plot</span> <span class="o">=</span> <span class="n">pred_true_uplift</span><span class="o">.</span><span class="nb">max</span><span class="p">()</span><span class="o">.</span><span class="nb">max</span><span class="p">()</span>
+<span class="n">min_on_plot</span> <span class="o">=</span> <span class="n">pred_true_uplift</span><span class="p">.</span><span class="nf">min</span><span class="p">().</span><span class="nf">min</span><span class="p">()</span>
+<span class="n">max_on_plot</span> <span class="o">=</span> <span class="n">pred_true_uplift</span><span class="p">.</span><span class="nf">max</span><span class="p">().</span><span class="nf">max</span><span class="p">()</span>
 
-<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">min_on_plot</span><span class="p">,</span> <span class="n">max_on_plot</span><span class="p">],</span> <span class="p">[</span><span class="n">min_on_plot</span><span class="p">,</span> <span class="n">max_on_plot</span><span class="p">],</span>
-        <span class="n">linestyle</span><span class="o">=</span><span class="s">'--'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">'tab:orange'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">'One-one line'</span><span class="p">)</span>
-<span class="n">pred_true_uplift</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s">'Predicted Uplift'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">'True Uplift'</span><span class="p">,</span>
-                              <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">'Model performance'</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="p">.</span><span class="nf">axes</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">.</span><span class="nf">plot</span><span class="p">([</span><span class="n">min_on_plot</span><span class="p">,</span> <span class="n">max_on_plot</span><span class="p">],</span> <span class="p">[</span><span class="n">min_on_plot</span><span class="p">,</span> <span class="n">max_on_plot</span><span class="p">],</span>
+        <span class="n">linestyle</span><span class="o">=</span><span class="sh">'</span><span class="s">--</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">'</span><span class="s">tab:orange</span><span class="sh">'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">One-one line</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">pred_true_uplift</span><span class="p">.</span><span class="n">plot</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="sh">'</span><span class="s">Predicted Uplift</span><span class="sh">'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="sh">'</span><span class="s">True Uplift</span><span class="sh">'</span><span class="p">,</span>
+                              <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Model performance</span><span class="sh">'</span><span class="p">)</span>
 
-<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">.</span><span class="nf">legend</span><span class="p">()</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;matplotlib.legend.Legend at 0x1a1c84c990&gt;
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;matplotlib.legend.Legend at 0x1a1c84c990&gt;
 </code></pre></div></div>
 
 <p><img src="/assets/images/2020-07-08-uplift-modeling/output_68_1.png" alt="png" /></p>
@@ -1103,22 +1102,22 @@ Name: Uplift score, dtype: float32
 
 <p>This idea underlies the cumulative gain chart. The formula for cumulative gain is given by Gutierrez and Gerardy (2016) as:</p>
 
-<script type="math/tex; mode=display">\left( \frac{Y^T}{N^T} - \frac{Y^C}{N^C} \right) \left( N^T + N^C \right)</script>
+\[\left( \frac{Y^T}{N^T} - \frac{Y^C}{N^C} \right) \left( N^T + N^C \right)\]
 
 <p>where $Y^T$ is the cumulative sum of conversions in each bin of the treatment group, starting with the highest score bin and proceeding down, and $N^T$ is the cumulative number of customers found in the same way; $Y^C$ and $N^C$ are similar cumulative sums for the control group. Cumulative gain effectively measures the cumulative uplift in probability of conversion, starting with the highest bin, and multiplies by the number of total customers in both treatment and control groups, to estimate the number of additional conversions that would occur if that number of customers were targeted.</p>
 
-<p>To get the data for the cumulative gain chart, we will need to calculate the amount of customers in each score quantile bin, both in the treatment and control groups (we visualized this above but will recalculate it here) and also the sum of converted customers. Here we’ll flip the result upside down with <code class="highlighter-rouge">.iloc[::-1]</code> to simulate the strategy of targeting the customers with highest uplift scores first, and proceeding down from there.</p>
+<p>To get the data for the cumulative gain chart, we will need to calculate the amount of customers in each score quantile bin, both in the treatment and control groups (we visualized this above but will recalculate it here) and also the sum of converted customers. Here we’ll flip the result upside down with <code class="language-plaintext highlighter-rouge">.iloc[::-1]</code> to simulate the strategy of targeting the customers with highest uplift scores first, and proceeding down from there.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">treatment_count_by_quantile</span> <span class="o">=</span> <span class="n">valid_w_score</span><span class="p">[</span><span class="n">validation_treatment_mask</span><span class="p">]</span>\
-    <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s">'Quantile bin'</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="s">'conversion'</span><span class="p">:[</span><span class="s">'sum'</span><span class="p">,</span> <span class="s">'count'</span><span class="p">]})</span><span class="o">.</span><span class="n">iloc</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="p">.</span><span class="nf">groupby</span><span class="p">(</span><span class="sh">'</span><span class="s">Quantile bin</span><span class="sh">'</span><span class="p">).</span><span class="nf">agg</span><span class="p">({</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">:[</span><span class="sh">'</span><span class="s">sum</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">count</span><span class="sh">'</span><span class="p">]}).</span><span class="n">iloc</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
 <span class="n">control_count_by_quantile</span> <span class="o">=</span> <span class="n">valid_w_score</span><span class="p">[</span><span class="o">~</span><span class="n">validation_treatment_mask</span><span class="p">]</span>\
-    <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s">'Quantile bin'</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="s">'conversion'</span><span class="p">:[</span><span class="s">'sum'</span><span class="p">,</span> <span class="s">'count'</span><span class="p">]})</span><span class="o">.</span><span class="n">iloc</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="p">.</span><span class="nf">groupby</span><span class="p">(</span><span class="sh">'</span><span class="s">Quantile bin</span><span class="sh">'</span><span class="p">).</span><span class="nf">agg</span><span class="p">({</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">:[</span><span class="sh">'</span><span class="s">sum</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">count</span><span class="sh">'</span><span class="p">]}).</span><span class="n">iloc</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </code></pre></div></div>
 
 <p>Here is how the treatment group looks, for example:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">treatment_count_by_quantile</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">treatment_count_by_quantile</span><span class="p">.</span><span class="nf">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 </code></pre></div></div>
 
 <div>
@@ -1188,7 +1187,7 @@ Name: Uplift score, dtype: float32
 
 <p>And the cumulative sums of conversions and total customers:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">treatment_count_by_quantile</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">treatment_count_by_quantile</span><span class="p">.</span><span class="nf">cumsum</span><span class="p">().</span><span class="nf">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 </code></pre></div></div>
 
 <div>
@@ -1259,21 +1258,21 @@ Name: Uplift score, dtype: float32
 <p>Putting all this together into the formula for cumulative gain shown above, we have:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cumulative_gain</span> <span class="o">=</span> \
-    <span class="p">((</span><span class="n">treatment_count_by_quantile</span><span class="p">[(</span><span class="s">'conversion'</span><span class="p">,</span><span class="s">'sum'</span><span class="p">)]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-      <span class="o">/</span> <span class="n">treatment_count_by_quantile</span><span class="p">[(</span><span class="s">'conversion'</span><span class="p">,</span><span class="s">'count'</span><span class="p">)]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">())</span>
+    <span class="p">((</span><span class="n">treatment_count_by_quantile</span><span class="p">[(</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span><span class="sh">'</span><span class="s">sum</span><span class="sh">'</span><span class="p">)].</span><span class="nf">cumsum</span><span class="p">()</span>
+      <span class="o">/</span> <span class="n">treatment_count_by_quantile</span><span class="p">[(</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span><span class="sh">'</span><span class="s">count</span><span class="sh">'</span><span class="p">)].</span><span class="nf">cumsum</span><span class="p">())</span>
      <span class="o">-</span>
-     <span class="p">(</span><span class="n">control_count_by_quantile</span><span class="p">[(</span><span class="s">'conversion'</span><span class="p">,</span><span class="s">'sum'</span><span class="p">)]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-      <span class="o">/</span> <span class="n">control_count_by_quantile</span><span class="p">[(</span><span class="s">'conversion'</span><span class="p">,</span><span class="s">'count'</span><span class="p">)]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()))</span> \
-    <span class="o">*</span> <span class="p">(</span><span class="n">treatment_count_by_quantile</span><span class="p">[(</span><span class="s">'conversion'</span><span class="p">,</span><span class="s">'count'</span><span class="p">)]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-       <span class="o">+</span> <span class="n">control_count_by_quantile</span><span class="p">[(</span><span class="s">'conversion'</span><span class="p">,</span><span class="s">'count'</span><span class="p">)]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">())</span>
+     <span class="p">(</span><span class="n">control_count_by_quantile</span><span class="p">[(</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span><span class="sh">'</span><span class="s">sum</span><span class="sh">'</span><span class="p">)].</span><span class="nf">cumsum</span><span class="p">()</span>
+      <span class="o">/</span> <span class="n">control_count_by_quantile</span><span class="p">[(</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span><span class="sh">'</span><span class="s">count</span><span class="sh">'</span><span class="p">)].</span><span class="nf">cumsum</span><span class="p">()))</span> \
+    <span class="o">*</span> <span class="p">(</span><span class="n">treatment_count_by_quantile</span><span class="p">[(</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span><span class="sh">'</span><span class="s">count</span><span class="sh">'</span><span class="p">)].</span><span class="nf">cumsum</span><span class="p">()</span>
+       <span class="o">+</span> <span class="n">control_count_by_quantile</span><span class="p">[(</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span><span class="sh">'</span><span class="s">count</span><span class="sh">'</span><span class="p">)].</span><span class="nf">cumsum</span><span class="p">())</span>
 </code></pre></div></div>
 
 <p>We can now examine and plot the cumulative gain.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cumulative_gain</span><span class="o">.</span><span class="nb">round</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cumulative_gain</span><span class="p">.</span><span class="nf">round</span><span class="p">()</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Quantile bin
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Quantile bin
 (0.201, 0.398]         74.0
 (0.148, 0.201]        125.0
 (0.121, 0.148]        149.0
@@ -1287,11 +1286,11 @@ Name: Uplift score, dtype: float32
 dtype: float64
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cumulative_gain</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">barh</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'Cumulative gain in converted customers'</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cumulative_gain</span><span class="p">.</span><span class="n">plot</span><span class="p">.</span><span class="nf">barh</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xlabel</span><span class="p">(</span><span class="sh">'</span><span class="s">Cumulative gain in converted customers</span><span class="sh">'</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0.5, 0, 'Cumulative gain in converted customers')
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0.5, 0, 'Cumulative gain in converted customers')
 </code></pre></div></div>
 
 <p><img src="/assets/images/2020-07-08-uplift-modeling/output_80_1.png" alt="png" /></p>
@@ -1303,16 +1302,16 @@ dtype: float64
 
 <p>The gain curve is defined as</p>
 
-<script type="math/tex; mode=display">f(t) = \left( \frac{Y_t^T}{N_t^T} - \frac{Y_t^C}{N_t^C} \right) \left( N_t^T + N_t^C \right)</script>
+\[f(t) = \left( \frac{Y_t^T}{N_t^T} - \frac{Y_t^C}{N_t^C} \right) \left( N_t^T + N_t^C \right)\]
 
 <p>where $t$ is the index of the customer, starting from the highest uplift score and proceeding down, and the other variables are defined similarly to the previous equation.</p>
 
 <p>The gain curve calculation is available as part of the CausalML package, where it is called the uplift curve (CausalML). It can also be calculated fairly quickly in pandas. The first step is sorting on uplift score:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sorted_valid</span> <span class="o">=</span> <span class="n">valid_w_score</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s">'Uplift score'</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>\
-<span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sorted_valid</span> <span class="o">=</span> <span class="n">valid_w_score</span><span class="p">.</span><span class="nf">sort_values</span><span class="p">(</span><span class="sh">'</span><span class="s">Uplift score</span><span class="sh">'</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>\
+<span class="p">.</span><span class="nf">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-<span class="n">sorted_valid</span><span class="p">[[</span><span class="s">'treatment_group_key'</span><span class="p">,</span> <span class="s">'conversion'</span><span class="p">,</span> <span class="s">'Uplift score'</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">sorted_valid</span><span class="p">[[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">Uplift score</span><span class="sh">'</span><span class="p">]].</span><span class="nf">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 </code></pre></div></div>
 
 <div>
@@ -1403,18 +1402,18 @@ dtype: float64
 </table>
 </div>
 
-<p>On to this <code class="highlighter-rouge">DataFrame</code>, we add a few columns which will make the calculation of the curve easier, following the notation in the equations above.</p>
+<p>On to this <code class="language-plaintext highlighter-rouge">DataFrame</code>, we add a few columns which will make the calculation of the curve easier, following the notation in the equations above.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'Y_T'</span><span class="p">]</span> <span class="o">=</span> \
-    <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'conversion'</span><span class="p">]</span> <span class="o">*</span> <span class="n">sorted_valid</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">])</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-<span class="n">sorted_valid</span><span class="p">[</span><span class="s">'Y_C'</span><span class="p">]</span> <span class="o">=</span> \
-    <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'conversion'</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-<span class="n">sorted_valid</span><span class="p">[</span><span class="s">'N_T'</span><span class="p">]</span> <span class="o">=</span> <span class="n">sorted_valid</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-<span class="n">sorted_valid</span><span class="p">[</span><span class="s">'N_C'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'treatment_group_key'</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">Y_T</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> \
+    <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">]</span> <span class="o">*</span> <span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">]).</span><span class="nf">cumsum</span><span class="p">()</span>
+<span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">Y_C</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> \
+    <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">)).</span><span class="nf">cumsum</span><span class="p">()</span>
+<span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">N_T</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">].</span><span class="nf">cumsum</span><span class="p">()</span>
+<span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">N_C</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">).</span><span class="nf">cumsum</span><span class="p">()</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sorted_valid</span><span class="p">[[</span><span class="s">'treatment_group_key'</span><span class="p">,</span> <span class="s">'conversion'</span><span class="p">,</span> <span class="s">'Uplift score'</span><span class="p">,</span>
-              <span class="s">'Y_T'</span><span class="p">,</span> <span class="s">'Y_C'</span><span class="p">,</span> <span class="s">'N_T'</span><span class="p">,</span> <span class="s">'N_C'</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sorted_valid</span><span class="p">[[</span><span class="sh">'</span><span class="s">treatment_group_key</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">conversion</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">Uplift score</span><span class="sh">'</span><span class="p">,</span>
+              <span class="sh">'</span><span class="s">Y_T</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">Y_C</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">N_T</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">N_C</span><span class="sh">'</span><span class="p">]].</span><span class="nf">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 </code></pre></div></div>
 
 <div>
@@ -1551,21 +1550,21 @@ dtype: float64
 
 <p>Now the calculation of the gain curve can be done as follows:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'Gain curve'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'Y_T'</span><span class="p">]</span><span class="o">/</span><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'N_T'</span><span class="p">])</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">Gain curve</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">Y_T</span><span class="sh">'</span><span class="p">]</span><span class="o">/</span><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">N_T</span><span class="sh">'</span><span class="p">])</span>
     <span class="o">-</span>
-    <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'Y_C'</span><span class="p">]</span><span class="o">/</span><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'N_C'</span><span class="p">])</span>
-    <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'N_T'</span><span class="p">]</span> <span class="o">+</span> <span class="n">sorted_valid</span><span class="p">[</span><span class="s">'N_C'</span><span class="p">])</span>
+    <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">Y_C</span><span class="sh">'</span><span class="p">]</span><span class="o">/</span><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">N_C</span><span class="sh">'</span><span class="p">])</span>
+    <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">N_T</span><span class="sh">'</span><span class="p">]</span> <span class="o">+</span> <span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">N_C</span><span class="sh">'</span><span class="p">])</span>
 </code></pre></div></div>
 
 <p>Let’s examine the gain curve.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sorted_valid</span><span class="p">[</span><span class="s">'Gain curve'</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'Number of customers treated'</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">'Gain in conversion'</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">Gain curve</span><span class="sh">'</span><span class="p">].</span><span class="nf">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xlabel</span><span class="p">(</span><span class="sh">'</span><span class="s">Number of customers treated</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylabel</span><span class="p">(</span><span class="sh">'</span><span class="s">Gain in conversion</span><span class="sh">'</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0, 0.5, 'Gain in conversion')
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0, 0.5, 'Gain in conversion')
 </code></pre></div></div>
 
 <p><img src="/assets/images/2020-07-08-uplift-modeling/output_90_1.png" alt="png" /></p>
@@ -1576,61 +1575,61 @@ dtype: float64
 
 <p>The scaled x-axis represents the fraction of the population targeted:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gain_x</span> <span class="o">=</span> <span class="n">sorted_valid</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span> <span class="o">+</span> <span class="mi">1</span>
-<span class="n">gain_x</span> <span class="o">=</span> <span class="n">gain_x</span><span class="o">/</span><span class="n">gain_x</span><span class="o">.</span><span class="nb">max</span><span class="p">()</span>
-<span class="k">print</span><span class="p">(</span><span class="n">gain_x</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
-<span class="k">print</span><span class="p">(</span><span class="n">gain_x</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gain_x</span> <span class="o">=</span> <span class="n">sorted_valid</span><span class="p">.</span><span class="n">index</span><span class="p">.</span><span class="n">values</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">gain_x</span> <span class="o">=</span> <span class="n">gain_x</span><span class="o">/</span><span class="n">gain_x</span><span class="p">.</span><span class="nf">max</span><span class="p">()</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">gain_x</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">gain_x</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[0.0005 0.001  0.0015]
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[0.0005 0.001  0.0015]
 [0.999  0.9995 1.    ]
 </code></pre></div></div>
 
 <p>And the scaled y-axis is the fraction of gain from treating the entire population:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gain_y</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">sorted_valid</span><span class="p">[</span><span class="s">'Gain curve'</span><span class="p">]</span>
+    <span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">Gain curve</span><span class="sh">'</span><span class="p">]</span>
     <span class="o">/</span>
-    <span class="n">sorted_valid</span><span class="p">[</span><span class="s">'Gain curve'</span><span class="p">]</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">sorted_valid</span><span class="p">[</span><span class="sh">'</span><span class="s">Gain curve</span><span class="sh">'</span><span class="p">].</span><span class="nf">tail</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">values</span>
+    <span class="p">).</span><span class="n">values</span>
 
-<span class="k">print</span><span class="p">(</span><span class="n">gain_y</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
-<span class="k">print</span><span class="p">(</span><span class="n">gain_y</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">gain_y</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">gain_y</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[nan  0.  0.]
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[nan  0.  0.]
 [1.00802087 1.00534686 1.        ]
 </code></pre></div></div>
 
-<p>Note the first entry in the normalized gain curve is <code class="highlighter-rouge">NaN</code>; there will always be at least one of these at the beginning because either $N^T_t$ or $N^C_t$ will be zero for at least the first observation, leading to a divide by zero error. So we’ll drop entries from both the x and y vectors here to get rid of <code class="highlighter-rouge">NaN</code>s, which shouldn’t be an issue if the data set is large enough.</p>
+<p>Note the first entry in the normalized gain curve is <code class="language-plaintext highlighter-rouge">NaN</code>; there will always be at least one of these at the beginning because either $N^T_t$ or $N^C_t$ will be zero for at least the first observation, leading to a divide by zero error. So we’ll drop entries from both the x and y vectors here to get rid of <code class="language-plaintext highlighter-rouge">NaN</code>s, which shouldn’t be an issue if the data set is large enough.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">nan_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">gain_y</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">nan_mask</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">isnan</span><span class="p">(</span><span class="n">gain_y</span><span class="p">)</span>
 <span class="n">gain_x</span> <span class="o">=</span> <span class="n">gain_x</span><span class="p">[</span><span class="o">~</span><span class="n">nan_mask</span><span class="p">]</span>
 <span class="n">gain_y</span> <span class="o">=</span> <span class="n">gain_y</span><span class="p">[</span><span class="o">~</span><span class="n">nan_mask</span><span class="p">]</span>
-<span class="k">print</span><span class="p">(</span><span class="n">gain_y</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
-<span class="k">print</span><span class="p">(</span><span class="n">gain_y</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">gain_y</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">gain_y</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[0.         0.         0.00805023]
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[0.         0.         0.00805023]
 [1.00802087 1.00534686 1.        ]
 </code></pre></div></div>
 
 <p>Now we can plot the normalized gain curve, along with a computed AUC. To this, we’ll add a one-one line. Similar to the interpretation of a one-one line on an ROC curve, here this corresponds to the gain curve we’d theoretically expect by treating customers at random: the fraction of the gain we would get by treating all customers increases according to the fraction treated and the ATE.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">'font.size'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">8</span>
-<span class="n">gain_auc</span> <span class="o">=</span> <span class="n">auc</span><span class="p">(</span><span class="n">gain_x</span><span class="p">,</span> <span class="n">gain_y</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">mpl</span><span class="p">.</span><span class="n">rcParams</span><span class="p">[</span><span class="sh">'</span><span class="s">font.size</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">gain_auc</span> <span class="o">=</span> <span class="nf">auc</span><span class="p">(</span><span class="n">gain_x</span><span class="p">,</span> <span class="n">gain_y</span><span class="p">)</span>
 
-<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">gain_x</span><span class="p">,</span> <span class="n">gain_y</span><span class="p">,</span>
-        <span class="n">label</span><span class="o">=</span><span class="s">'Normalized gain curve, AUC {}'</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">gain_auc</span><span class="o">.</span><span class="nb">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-        <span class="s">'--'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">'tab:orange'</span><span class="p">,</span>
-        <span class="n">label</span><span class="o">=</span><span class="s">'Random treatment'</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s">'equal'</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">'Fraction of population treated'</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">'Fraction of gain in converted customers'</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="p">.</span><span class="nf">axes</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">gain_x</span><span class="p">,</span> <span class="n">gain_y</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Normalized gain curve, AUC {}</span><span class="sh">'</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span><span class="n">gain_auc</span><span class="p">.</span><span class="nf">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+<span class="n">ax</span><span class="p">.</span><span class="nf">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="sh">'</span><span class="s">--</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="sh">'</span><span class="s">tab:orange</span><span class="sh">'</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Random treatment</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">.</span><span class="nf">set_aspect</span><span class="p">(</span><span class="sh">'</span><span class="s">equal</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">.</span><span class="nf">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">.</span><span class="nf">set_xlabel</span><span class="p">(</span><span class="sh">'</span><span class="s">Fraction of population treated</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">.</span><span class="nf">set_ylabel</span><span class="p">(</span><span class="sh">'</span><span class="s">Fraction of gain in converted customers</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">.</span><span class="nf">grid</span><span class="p">()</span>
 </code></pre></div></div>
 
 <p><img src="/assets/images/2020-07-08-uplift-modeling/output_98_0.png" alt="png" /></p>

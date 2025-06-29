@@ -2,9 +2,9 @@
 <html lang="en"><head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.0 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>Overfitting, underfitting, and the bias-variance tradeoff | Steve Klosterman</title>
-<meta name="generator" content="Jekyll v3.8.5" />
+<meta name="generator" content="Jekyll v4.4.1" />
 <meta property="og:title" content="Overfitting, underfitting, and the bias-variance tradeoff" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Data Science and Machine Learning" />
@@ -14,8 +14,10 @@
 <meta property="og:site_name" content="Steve Klosterman" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2019-05-19T00:00:00-07:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Overfitting, underfitting, and the bias-variance tradeoff" />
 <script type="application/ld+json">
-{"description":"Data Science and Machine Learning","@type":"BlogPosting","url":"http://localhost:4000/over-under/","headline":"Overfitting, underfitting, and the bias-variance tradeoff","dateModified":"2019-05-19T00:00:00-07:00","datePublished":"2019-05-19T00:00:00-07:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/over-under/"},"@context":"https://schema.org"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2019-05-19T00:00:00-07:00","datePublished":"2019-05-19T00:00:00-07:00","description":"Data Science and Machine Learning","headline":"Overfitting, underfitting, and the bias-variance tradeoff","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/over-under/"},"url":"http://localhost:4000/over-under/"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Steve Klosterman" /></head>
 <body><header class="site-header" role="banner">
@@ -35,14 +37,7 @@
 </header>
 <main class="page-content" aria-label="Content">
       <div class="wrapper">
-        
-<script type="text/javascript" async
-        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-
-
-
-<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Overfitting, underfitting, and the bias-variance tradeoff</h1>
@@ -74,11 +69,11 @@
 <p>Let’s examine concrete examples of underfitting, overfitting, and the ideal that sits in between, by fitting polynomial models to synthetic data in Python.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#Import packages
-</span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span> <span class="c1">#numerical computation
-</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span> <span class="c1">#plotting package
+</span><span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">np</span> <span class="c1">#numerical computation
+</span><span class="kn">import</span> <span class="n">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span> <span class="c1">#plotting package
 #Next line helps with rendering plots
 </span><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="n">mpl</span> <span class="c1">#additional plotting functionality
+<span class="kn">import</span> <span class="n">matplotlib</span> <span class="k">as</span> <span class="n">mpl</span> <span class="c1">#additional plotting functionality
 </span></code></pre></div></div>
 
 <h1 id="underfitting-and-overfitting-with-polynomial-models">Underfitting and overfitting with polynomial models</h1>
@@ -87,112 +82,112 @@
 <ul>
   <li>Choose 20 points randomly on the interval [0, 11). This includes 0 but not 11, technically speaking.</li>
   <li>Sort them so that they’re in order.</li>
-  <li>Put them through a quadratic transformation and add some noise: <script type="math/tex">y = (-x+2)(x-9) + \epsilon</script>.
+  <li>Put them through a quadratic transformation and add some noise: \(y = (-x+2)(x-9) + \epsilon\).
     <ul>
-      <li><script type="math/tex">\epsilon</script> is normally distributed noise with mean 0 and standard deviation 3.</li>
+      <li>\(\epsilon\) is normally distributed noise with mean 0 and standard deviation 3.</li>
     </ul>
   </li>
 </ul>
 
 <p>Then we make a scatter plot of the data.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
 <span class="n">n_points</span> <span class="o">=</span> <span class="mi">20</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
-<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">'figure.dpi'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">400</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">sort</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
+<span class="n">mpl</span><span class="p">.</span><span class="n">rcParams</span><span class="p">[</span><span class="sh">'</span><span class="s">figure.dpi</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">400</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xticks</span><span class="p">([])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">yticks</span><span class="p">([])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
 </code></pre></div></div>
 
 <p><img src="/assets/images/output_4_1.png" alt="png" width="500px" /></p>
 
-<p>This looks like the shape of a parabola, as expected for a quadratic transformation of <script type="math/tex">x</script>. However we can see the noise in the fact that not all the points appear that they would lie perfectly on the parabola.</p>
+<p>This looks like the shape of a parabola, as expected for a quadratic transformation of \(x\). However we can see the noise in the fact that not all the points appear that they would lie perfectly on the parabola.</p>
 
-<p>In our synthetic example, we know the <strong>data generating process</strong>: the response variable <script type="math/tex">y</script> is a quadratic transformation of the feature <script type="math/tex">x</script>. In general, when building machine learning models, the data generating process is not known. Instead, several candidate features are proposed, a model is proposed, and an exploration is made of how well these features and this model can explain the data.</p>
+<p>In our synthetic example, we know the <strong>data generating process</strong>: the response variable \(y\) is a quadratic transformation of the feature \(x\). In general, when building machine learning models, the data generating process is not known. Instead, several candidate features are proposed, a model is proposed, and an exploration is made of how well these features and this model can explain the data.</p>
 
 <p>In this case, we would likely plot the data, observe the apparent quadratic relationship, and use a quadratic model. However, for the sake of illustration of an <strong>underfit model</strong>, what does a linear model for these data look like?</p>
 
-<p>We can fit a polynomial model of degree 1, in other words a linear model, with numpy’s <code class="highlighter-rouge">polyfit</code>:</p>
+<p>We can fit a polynomial model of degree 1, in other words a linear model, with numpy’s <code class="language-plaintext highlighter-rouge">polyfit</code>:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">lin_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">lin_fit</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">lin_fit</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>array([ 0.44464616, -0.61869372])
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>array([ 0.44464616, -0.61869372])
 </code></pre></div></div>
 
-<p>This has produced the slope and intercept of the line of best fit for these data. Let’s plot it and see what it looks like. We can calculate the linear transformation of the feature <script type="math/tex">x</script> using the slope and intercept we got from fitting the linear model, again using numpy, this time the <code class="highlighter-rouge">polyval</code> function. We’ll label this the “Underfit model”.</p>
+<p>This has produced the slope and intercept of the line of best fit for these data. Let’s plot it and see what it looks like. We can calculate the linear transformation of the feature \(x\) using the slope and intercept we got from fitting the linear model, again using numpy, this time the <code class="language-plaintext highlighter-rouge">polyval</code> function. We’ll label this the “Underfit model”.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cmap</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s">'tab10'</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cmap</span> <span class="o">=</span> <span class="n">mpl</span><span class="p">.</span><span class="n">cm</span><span class="p">.</span><span class="nf">get_cmap</span><span class="p">(</span><span class="sh">'</span><span class="s">tab10</span><span class="sh">'</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">'Data'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">lin_fit</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s">'Underfit model'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">[</span><span class="mf">0.17</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Data</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyval</span><span class="p">(</span><span class="n">lin_fit</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Underfit model</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">[</span><span class="mf">0.17</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xticks</span><span class="p">([])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">yticks</span><span class="p">([])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
 </code></pre></div></div>
 
 <p><img src="/assets/images/output_9_1.png" alt="png" width="500px" /></p>
 
 <p>Doesn’t look like a very good fit, does it!</p>
 
-<p>Now let’s imagine we have many features available, that are polynomial transformations of <script type="math/tex">x</script>, specifically <script type="math/tex">x^2</script>, <script type="math/tex">x^3</script>,… <script type="math/tex">x^{15}</script>. This would be a large amount of features relative to the amount of samples (20) that we have. Again, in “real life”, we probably wouldn’t consider a model with all these features, since by observation we can see that a quadratic model, or 2nd degree polynomial, would likely be sufficient. However, identifying the ideal features isn’t always so straightforward. Our illustrative example serves to show what happens when we are very clearly using too many features.</p>
+<p>Now let’s imagine we have many features available, that are polynomial transformations of \(x\), specifically \(x^2\), \(x^3\),… \(x^{15}\). This would be a large amount of features relative to the amount of samples (20) that we have. Again, in “real life”, we probably wouldn’t consider a model with all these features, since by observation we can see that a quadratic model, or 2nd degree polynomial, would likely be sufficient. However, identifying the ideal features isn’t always so straightforward. Our illustrative example serves to show what happens when we are very clearly using too many features.</p>
 
 <p>Let’s make a 15 degree polynomial fit:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">high_poly_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">high_poly_fit</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
 </code></pre></div></div>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">high_poly_fit</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>array([ 1.04191511e-05, -7.58239114e-04,  2.48264043e-02, -4.83550912e-01,
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>array([ 1.04191511e-05, -7.58239114e-04,  2.48264043e-02, -4.83550912e-01,
         6.24182399e+00, -5.63097621e+01,  3.64815913e+02, -1.71732868e+03,
         5.87515347e+03, -1.44598953e+04,  2.50562989e+04, -2.94672314e+04,
         2.21483755e+04, -9.60766525e+03,  1.99634019e+03, -1.43201982e+02])
 </code></pre></div></div>
 
-<p>These are the coefficients of all the powers of <script type="math/tex">x</script> from 1 through 15 in this model, and the intercept. Notice the widely different scales of the coefficients: some are close to zero, while others are fairly large in terms of magnitude (absolute value). Let’s plot this model as well. First we generate a large number of evenly spaced points over the range of <script type="math/tex">x</script> values, so we can see how this model looks not only for the particular values of <script type="math/tex">x</script> used for model training, but also for values in between.</p>
+<p>These are the coefficients of all the powers of \(x\) from 1 through 15 in this model, and the intercept. Notice the widely different scales of the coefficients: some are close to zero, while others are fairly large in terms of magnitude (absolute value). Let’s plot this model as well. First we generate a large number of evenly spaced points over the range of \(x\) values, so we can see how this model looks not only for the particular values of \(x\) used for model training, but also for values in between.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">curve_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">333</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">curve_x</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">333</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">'Data'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">lin_fit</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s">'Underfit model'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">high_poly_fit</span><span class="p">,</span> <span class="n">curve_x</span><span class="p">),</span>
-         <span class="n">label</span><span class="o">=</span><span class="s">'Overfit model'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">[</span><span class="mf">0.17</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Data</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyval</span><span class="p">(</span><span class="n">lin_fit</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Underfit model</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyval</span><span class="p">(</span><span class="n">high_poly_fit</span><span class="p">,</span> <span class="n">curve_x</span><span class="p">),</span>
+         <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Overfit model</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">[</span><span class="mf">0.17</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xticks</span><span class="p">([])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">yticks</span><span class="p">([])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
 </code></pre></div></div>
 
 <p><img src="/assets/images/output_15_1.png" alt="png" width="500px" /></p>
 
 <p>This is a classic case of overfitting. The overfit model passes nearly perfectly through all the training data. However it’s easy to see that for values in between, the overfit model does not look like a realistic representation of the data generating process. Rather, the overfit model has become tuned to the noise of the training data. This matches the definition of high variance given above.</p>
 
-<p>In this last graph, you can see another definition of high variance: a small change in the input <script type="math/tex">x</script> can result in a large change in the output <script type="math/tex">y</script>.</p>
+<p>In this last graph, you can see another definition of high variance: a small change in the input \(x\) can result in a large change in the output \(y\).</p>
 
-<p>Further, you can imagine that if we generated a new, larger synthetic data set, using the same quadratic function <script type="math/tex">y = (-x+2)(x-9)</script>, but added new randomly generated noise <script type="math/tex">\epsilon</script> according to the same distribution we used above, then randomly sampled 20 points and fit the high-degree polynomial, the resulting model would look much different. It would pass almost perfectly through these new noisy points and the coefficients of the 15 degree polynomial would be very different to allow this to happen. Repeating this process with different samples of 20 points, would continue to result in highly variable coefficient estimates. In other words, the coefficients would have high variance between samples of the data used for model training. This is yet another definition of a model with high variance.</p>
+<p>Further, you can imagine that if we generated a new, larger synthetic data set, using the same quadratic function \(y = (-x+2)(x-9)\), but added new randomly generated noise \(\epsilon\) according to the same distribution we used above, then randomly sampled 20 points and fit the high-degree polynomial, the resulting model would look much different. It would pass almost perfectly through these new noisy points and the coefficients of the 15 degree polynomial would be very different to allow this to happen. Repeating this process with different samples of 20 points, would continue to result in highly variable coefficient estimates. In other words, the coefficients would have high variance between samples of the data used for model training. This is yet another definition of a model with high variance.</p>
 
 <p>With our synthetic data, since in this case we know the data generating process, we can see how a 2nd degree polynomial fit looks in comparison with the underfit and overfit models.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">'Data'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">lin_fit</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s">'Underfit model'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">high_poly_fit</span><span class="p">,</span> <span class="n">curve_x</span><span class="p">),</span>
-         <span class="n">label</span><span class="o">=</span><span class="s">'Overfit model'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">curve_x</span><span class="p">),</span>
-         <span class="n">label</span><span class="o">=</span><span class="s">'Ideal model'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">[</span><span class="mf">0.17</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Data</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyval</span><span class="p">(</span><span class="n">lin_fit</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Underfit model</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyval</span><span class="p">(</span><span class="n">high_poly_fit</span><span class="p">,</span> <span class="n">curve_x</span><span class="p">),</span>
+         <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Overfit model</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyval</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nf">polyfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">curve_x</span><span class="p">),</span>
+         <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Ideal model</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">[</span><span class="mf">0.17</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xticks</span><span class="p">([])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">yticks</span><span class="p">([])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
 </code></pre></div></div>
 
 <p><img src="/assets/images/output_17_1.png" alt="png" width="500px" /></p>
@@ -201,54 +196,54 @@
 
 <h1 id="regularization-with-ridge-regression">Regularization with ridge regression</h1>
 
-<p>In order to show how regularization works to reduce overfitting, we’ll use the scikit-learn package. First, we need to create polynomial features manually. While above we simply had to tell numpy to fit a 15 degree polynomial to the data, here we need to manually create the features <script type="math/tex">x^2</script>, <script type="math/tex">x^3</script>,… <script type="math/tex">x^{15}</script> and then fit a linear model to find their coefficients. Scikit-learn makes creating polynomial features easy with <code class="highlighter-rouge">PolynomialFeatures</code>. We just say we want 15 degrees worth of polynomial features, without a bias feature (intercept), then pass our array <script type="math/tex">x</script> reshaped as a column.</p>
+<p>In order to show how regularization works to reduce overfitting, we’ll use the scikit-learn package. First, we need to create polynomial features manually. While above we simply had to tell numpy to fit a 15 degree polynomial to the data, here we need to manually create the features \(x^2\), \(x^3\),… \(x^{15}\) and then fit a linear model to find their coefficients. Scikit-learn makes creating polynomial features easy with <code class="language-plaintext highlighter-rouge">PolynomialFeatures</code>. We just say we want 15 degrees worth of polynomial features, without a bias feature (intercept), then pass our array \(x\) reshaped as a column.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">PolynomialFeatures</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">PolynomialFeatures</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">poly</span> <span class="o">=</span> <span class="n">PolynomialFeatures</span><span class="p">(</span><span class="n">degree</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">include_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">poly</span> <span class="o">=</span> <span class="nc">PolynomialFeatures</span><span class="p">(</span><span class="n">degree</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">include_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">poly_features</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="n">poly_features</span><span class="o">.</span><span class="n">shape</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">poly_features</span> <span class="o">=</span> <span class="n">poly</span><span class="p">.</span><span class="nf">fit_transform</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="nf">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">poly_features</span><span class="p">.</span><span class="n">shape</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(20, 15)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(20, 15)
 </code></pre></div></div>
 
-<p>We get back 15 columns, where the first column is <script type="math/tex">x</script>, the second <script type="math/tex">x^2</script>, etc. Now we need to determine coefficients for these polynomial features. Above, we did this by using numpy to find the coefficients that provided the best fit to the training data. However, we saw this led to an overfit model. Here, we will pass these data to a routine for <strong>ridge regression</strong>, which is a kind of <strong>regularized regression</strong>. Without going too far in to details, regularized regression works by finding the coefficients resulting in the best fit to the data <em>while also limiting the magnitude of the coefficients</em>.</p>
+<p>We get back 15 columns, where the first column is \(x\), the second \(x^2\), etc. Now we need to determine coefficients for these polynomial features. Above, we did this by using numpy to find the coefficients that provided the best fit to the training data. However, we saw this led to an overfit model. Here, we will pass these data to a routine for <strong>ridge regression</strong>, which is a kind of <strong>regularized regression</strong>. Without going too far in to details, regularized regression works by finding the coefficients resulting in the best fit to the data <em>while also limiting the magnitude of the coefficients</em>.</p>
 
 <p>The effect of this is to provide a slightly worse fit to the data, in other words a model with higher bias. However, the goal is to avoid fitting the random noise, thus eliminating the high variance issue. Therefore, we are hoping to trade some variance for some bias, to obtain a model of the signal and not the noise.</p>
 
-<p>We will use the <code class="highlighter-rouge">Ridge</code> class from scikit-learn to do a ridge regression.</p>
+<p>We will use the <code class="language-plaintext highlighter-rouge">Ridge</code> class from scikit-learn to do a ridge regression.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">Ridge</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">Ridge</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ridge</span> <span class="o">=</span> <span class="n">Ridge</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">fit_intercept</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ridge</span> <span class="o">=</span> <span class="nc">Ridge</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">fit_intercept</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                         <span class="n">copy_X</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
                         <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>There are many options to set when instantiating the <code class="highlighter-rouge">Ridge</code> class. An important one is <code class="highlighter-rouge">alpha</code>. This controls how much regularization is applied; in other words, how strongly the coefficient magnitudes are penalized, and kept close to zero. We will use a value determined from experimentation just to illustrate the process. In general, the procedure for selecting <code class="highlighter-rouge">alpha</code> is to systematically evaluate a range of values, by examining model performance on a validation set or with a cross-validation procedure, to determine which one is expected to provide the best performance on the unseen test set. <code class="highlighter-rouge">alpha</code> is a model <strong>hyperparameter</strong> and this would be the process of hyperparameter <strong>tuning</strong>.</p>
+<p>There are many options to set when instantiating the <code class="language-plaintext highlighter-rouge">Ridge</code> class. An important one is <code class="language-plaintext highlighter-rouge">alpha</code>. This controls how much regularization is applied; in other words, how strongly the coefficient magnitudes are penalized, and kept close to zero. We will use a value determined from experimentation just to illustrate the process. In general, the procedure for selecting <code class="language-plaintext highlighter-rouge">alpha</code> is to systematically evaluate a range of values, by examining model performance on a validation set or with a cross-validation procedure, to determine which one is expected to provide the best performance on the unseen test set. <code class="language-plaintext highlighter-rouge">alpha</code> is a model <strong>hyperparameter</strong> and this would be the process of hyperparameter <strong>tuning</strong>.</p>
 
-<p>The other options we specified for <code class="highlighter-rouge">Ridge</code> indicate that we’d like to fit an intercept, normalize the features to the same scale before model fitting, which is necessary since the coefficients will all be penalized in the same way, and a few others. I’m glossing over these details here, although you can consult the scikit-learn documentation, as while as my <a href="/book/" target="_blank">book</a>, for further information.</p>
+<p>The other options we specified for <code class="language-plaintext highlighter-rouge">Ridge</code> indicate that we’d like to fit an intercept, normalize the features to the same scale before model fitting, which is necessary since the coefficients will all be penalized in the same way, and a few others. I’m glossing over these details here, although you can consult the scikit-learn documentation, as while as my <a href="/book/" target="_blank">book</a>, for further information.</p>
 
 <p>Now we proceed to fit the ridge regression using the polynomial features and the response variable.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ridge</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">poly_features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ridge</span><span class="p">.</span><span class="nf">fit</span><span class="p">(</span><span class="n">poly_features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Ridge(alpha=0.001, copy_X=True, fit_intercept=True, max_iter=None,
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Ridge(alpha=0.001, copy_X=True, fit_intercept=True, max_iter=None,
    normalize=True, random_state=1, solver='auto', tol=0.001)
 </code></pre></div></div>
 
 <p>What do the values of the fitted coefficients look like, in comparison to those found above by fitting the polynomial with numpy?</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ridge</span><span class="o">.</span><span class="n">coef_</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ridge</span><span class="p">.</span><span class="n">coef_</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>array([ 8.98768521e+00, -5.14275445e-01, -3.95480123e-02, -1.10685070e-03,
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>array([ 8.98768521e+00, -5.14275445e-01, -3.95480123e-02, -1.10685070e-03,
         4.49790120e-05,  8.58383048e-06,  6.74724995e-07,  3.02757058e-08,
        -3.81325130e-10, -2.54650509e-10, -3.25677313e-11, -2.66208560e-12,
        -1.05898398e-13,  1.22711353e-14,  3.90035611e-15])
@@ -256,25 +251,25 @@
 
 <p>We can see that the coefficient values from the regularized regression are relatively small in magnitude, compared to those from the polynomial fit. This is how regularization works: by “shrinking” coefficient values toward zero. For this reason regularization may also be referred to as <strong>shrinkage</strong>.</p>
 
-<p>Let’s obtain the predicted values <code class="highlighter-rouge">y_pred</code> over the large number of evenly spaced points <code class="highlighter-rouge">curve_x</code> we used above, for plotting. First we need to generate the polynomial features for all these points.</p>
+<p>Let’s obtain the predicted values <code class="language-plaintext highlighter-rouge">y_pred</code> over the large number of evenly spaced points <code class="language-plaintext highlighter-rouge">curve_x</code> we used above, for plotting. First we need to generate the polynomial features for all these points.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">poly_features_curve</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">curve_x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="n">y_pred</span> <span class="o">=</span> <span class="n">ridge</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">poly_features_curve</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">poly_features_curve</span> <span class="o">=</span> <span class="n">poly</span><span class="p">.</span><span class="nf">fit_transform</span><span class="p">(</span><span class="n">curve_x</span><span class="p">.</span><span class="nf">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">ridge</span><span class="p">.</span><span class="nf">predict</span><span class="p">(</span><span class="n">poly_features_curve</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>We’ll remove the underfit model from our plot, and add the regularized model.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">'Data'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">high_poly_fit</span><span class="p">,</span> <span class="n">curve_x</span><span class="p">),</span>
-         <span class="n">label</span><span class="o">=</span><span class="s">'Overfit model'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">curve_x</span><span class="p">),</span>
-         <span class="n">label</span><span class="o">=</span><span class="s">'Ideal model'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span>
-         <span class="n">label</span><span class="o">=</span><span class="s">'Regularized model'</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">'--'</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">[</span><span class="mf">0.17</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">plt</span><span class="p">.</span><span class="nf">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Data</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyval</span><span class="p">(</span><span class="n">high_poly_fit</span><span class="p">,</span> <span class="n">curve_x</span><span class="p">),</span>
+         <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Overfit model</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyval</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nf">polyfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">curve_x</span><span class="p">),</span>
+         <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Ideal model</span><span class="sh">'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">curve_x</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span>
+         <span class="n">label</span><span class="o">=</span><span class="sh">'</span><span class="s">Regularized model</span><span class="sh">'</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="nf">cmap</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">linestyle</span><span class="o">=</span><span class="sh">'</span><span class="s">--</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">[</span><span class="mf">0.17</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xticks</span><span class="p">([])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">yticks</span><span class="p">([])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
 </code></pre></div></div>
 
 <p><img src="/assets/images/output_34_1.png" alt="png" width="500px" /></p>
@@ -284,57 +279,57 @@
 <p>Note, however, that the regularized model should not be used for extrapolation. We can see that the regularized model starts to increase toward the right side of the plot. This increase should be viewed with suspicion, as there is nothing in the training data that makes it clear that this would be expected. This is an example of the general view that extrapolation of model predictions outside the range of the training data is not recommended.</p>
 
 <h1 id="effect-of-regularization-on-model-testing-performance">Effect of regularization on model testing performance</h1>
-<p>The goal of trading variance for bias is to improve model performance on unseen testing data. Let’s generate some testing data, in the same way we generated the training data, to see if we achieved this goal. We repeat the process used to generate <script type="math/tex">x</script> and <script type="math/tex">y = (-x+2)(x-9) + \epsilon</script> above, but with a different random seed. This results in different points <script type="math/tex">x</script> over the same interval and different random noise <script type="math/tex">\epsilon</script> from the same distribution, creating new values for the response variable <script type="math/tex">y</script>, but from the same data generating process.</p>
+<p>The goal of trading variance for bias is to improve model performance on unseen testing data. Let’s generate some testing data, in the same way we generated the training data, to see if we achieved this goal. We repeat the process used to generate \(x\) and \(y = (-x+2)(x-9) + \epsilon\) above, but with a different random seed. This results in different points \(x\) over the same interval and different random noise \(\epsilon\) from the same distribution, creating new values for the response variable \(y\), but from the same data generating process.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">n_points</span> <span class="o">=</span> <span class="mi">20</span>
-<span class="n">x_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
-<span class="n">x_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
-<span class="n">y_test</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">x_test</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_test</span><span class="o">-</span><span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
+<span class="n">x_test</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
+<span class="n">x_test</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">sort</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+<span class="n">y_test</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">x_test</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_test</span><span class="o">-</span><span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>We’ll also define a lambda function to measure prediction error as the root mean squared error (RMSE).</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">RMSE</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">y</span><span class="o">-</span><span class="n">y_pred</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">RMSE</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">np</span><span class="p">.</span><span class="nf">sqrt</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nf">mean</span><span class="p">((</span><span class="n">y</span><span class="o">-</span><span class="n">y_pred</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
 </code></pre></div></div>
 
 <p>What is the RMSE of our first model, the polynomial fit to the training data?</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">y_train_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">high_poly_fit</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">y_train_pred</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyval</span><span class="p">(</span><span class="n">high_poly_fit</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">RMSE</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_train_pred</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">RMSE</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_train_pred</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1.858235982416223
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1.858235982416223
 </code></pre></div></div>
 
 <p>How about the RMSE on the newly generated testing data?</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">y_test_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">high_poly_fit</span><span class="p">,</span> <span class="n">x_test</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">y_test_pred</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">polyval</span><span class="p">(</span><span class="n">high_poly_fit</span><span class="p">,</span> <span class="n">x_test</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">RMSE</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_test_pred</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">RMSE</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_test_pred</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>9811.219078261804
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>9811.219078261804
 </code></pre></div></div>
 
 <p>The testing error is vastly larger than the training error from this model, a clear sign of overfitting. How does the regularized model compare?</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">y_train_pred</span> <span class="o">=</span> <span class="n">ridge</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">poly_features</span><span class="p">)</span>
-<span class="n">RMSE</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_train_pred</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">y_train_pred</span> <span class="o">=</span> <span class="n">ridge</span><span class="p">.</span><span class="nf">predict</span><span class="p">(</span><span class="n">poly_features</span><span class="p">)</span>
+<span class="nc">RMSE</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_train_pred</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>3.235497045896461
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>3.235497045896461
 </code></pre></div></div>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">poly_features_test</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">x_test</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="n">y_test_pred</span> <span class="o">=</span> <span class="n">ridge</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">poly_features_test</span><span class="p">)</span>
-<span class="n">RMSE</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_test_pred</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">poly_features_test</span> <span class="o">=</span> <span class="n">poly</span><span class="p">.</span><span class="nf">fit_transform</span><span class="p">(</span><span class="n">x_test</span><span class="p">.</span><span class="nf">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">y_test_pred</span> <span class="o">=</span> <span class="n">ridge</span><span class="p">.</span><span class="nf">predict</span><span class="p">(</span><span class="n">poly_features_test</span><span class="p">)</span>
+<span class="nc">RMSE</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_test_pred</span><span class="p">)</span>
 </code></pre></div></div>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>3.5175193708774946
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>3.5175193708774946
 </code></pre></div></div>
 
 <p>While the regularized model has a bit higher training error (higher bias) than the polynomial fit, the testing error is greatly improved. This shows how the bias-variance tradeoff can be leveraged to improve model predictive capability.</p>

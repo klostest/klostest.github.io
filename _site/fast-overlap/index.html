@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Fast overlap finding for geographic datasets using GeoPandas | Steve Klosterman</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Fast overlap finding for geographic datasets using GeoPandas" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Finding intersections and other types of spatial overlaps are common tasks in computational geoscience. Applications include finding road intersections, determining which properties lie within protected areas, or learning the distance from homes to important businesses like grocery stores." />
+<meta property="og:description" content="Finding intersections and other types of spatial overlaps are common tasks in computational geoscience. Applications include finding road intersections, determining which properties lie within protected areas, or learning the distance from homes to important businesses like grocery stores." />
+<link rel="canonical" href="http://localhost:4000/fast-overlap/" />
+<meta property="og:url" content="http://localhost:4000/fast-overlap/" />
+<meta property="og:site_name" content="Steve Klosterman" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-06-30T00:00:00-07:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Fast overlap finding for geographic datasets using GeoPandas" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-06-30T00:00:00-07:00","datePublished":"2025-06-30T00:00:00-07:00","description":"Finding intersections and other types of spatial overlaps are common tasks in computational geoscience. Applications include finding road intersections, determining which properties lie within protected areas, or learning the distance from homes to important businesses like grocery stores.","headline":"Fast overlap finding for geographic datasets using GeoPandas","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/fast-overlap/"},"url":"http://localhost:4000/fast-overlap/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Steve Klosterman" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Steve Klosterman</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/book/">Book</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Fast overlap finding for geographic datasets using GeoPandas</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-06-30T00:00:00-07:00" itemprop="datePublished">Jun 30, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Finding intersections and other types of spatial overlaps are common tasks in computational geoscience. Applications include finding road intersections, determining which properties lie within protected areas, or learning the distance from homes to important businesses like grocery stores.</p>
+
+<p>In community-driven agroforestry projects, geographic polygons are needed to define farm boundaries. It may be the case that farm polygons were collected at different times by different people using Geographic Information Systems in the field, and a large number of polygons need to be checked for overlaps. This is important because carbon registries, which facilitate the carbon credits financial ecosystem, require that geographic boundaries of different project areas are distinct, or greater than a certain distance from each other, as a matter of due diligence and avoiding <a href="https://lune.co/blog/what-is-double-counting-in-carbon-offsetting-and-why-is-it-important">double-counting</a>.</p>
+
+<p>In this post I will generate a synthetic dataset of many polygons, some of which overlap, then illustrate a brute-force method of checking for intersections within the dataset, as well as faster methods that leverage a technology known as a spatial index, using the GeoPandas Python package. I will show usage of GeoPandas <a href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.intersects.html"><code class="language-plaintext highlighter-rouge">intersects</code></a>, <a href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.sjoin.html"><code class="language-plaintext highlighter-rouge">sjoin</code></a>, and <a href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.sjoin_nearest.html#geopandas.GeoDataFrame.sjoin_nearest"><code class="language-plaintext highlighter-rouge">sjoin_nearest</code></a>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="n">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">from</span> <span class="n">shapely.geometry</span> <span class="kn">import</span> <span class="n">Polygon</span>
+<span class="kn">import</span> <span class="n">geopandas</span> <span class="k">as</span> <span class="n">gpd</span>
+<span class="kn">import</span> <span class="n">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="n">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gpd</span><span class="p">.</span><span class="n">__version__</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>'1.0.1'
+</code></pre></div></div>
+
+<h1 id="generate-synthetic-polygons-dataset">Generate synthetic polygons dataset</h1>
+<p>The approach here is to create a dataframe with the coordinates of a number of bounding boxes. These are understood to be latitude, longitude coordinates.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#How many polygons?
+</span><span class="n">n</span> <span class="o">=</span> <span class="mi">50000</span>
+
+<span class="c1"># Set the seed
+</span><span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># Generate random integers
+</span><span class="n">random_lon</span> <span class="o">=</span> <span class="o">-</span><span class="mi">175</span> <span class="o">+</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">175</span><span class="o">+</span><span class="mi">165</span><span class="p">)</span>
+<span class="n">random_lat</span> <span class="o">=</span> <span class="o">-</span><span class="mi">85</span> <span class="o">+</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">75</span><span class="o">+</span><span class="mi">85</span><span class="p">)</span>
+<span class="n">random_increment_lon</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="n">random_increment_lat</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+<span class="n">gdf</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="nc">DataFrame</span><span class="p">({</span>
+    <span class="sh">'</span><span class="s">bbox_lon_min</span><span class="sh">'</span><span class="p">:</span><span class="n">random_lon</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">bbox_lon_max</span><span class="sh">'</span><span class="p">:</span><span class="n">random_lon</span><span class="o">+</span><span class="n">random_increment_lon</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">bbox_lat_min</span><span class="sh">'</span><span class="p">:</span><span class="n">random_lat</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">bbox_lat_max</span><span class="sh">'</span><span class="p">:</span><span class="n">random_lat</span><span class="o">+</span><span class="n">random_increment_lat</span><span class="p">,</span>
+<span class="p">})</span>
+
+<span class="n">gdf</span><span class="p">.</span><span class="nf">info</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 50000 entries, 0 to 49999
+Data columns (total 4 columns):
+ #   Column        Non-Null Count  Dtype  
+---  ------        --------------  -----  
+ 0   bbox_lon_min  50000 non-null  float64
+ 1   bbox_lon_max  50000 non-null  float64
+ 2   bbox_lat_min  50000 non-null  float64
+ 3   bbox_lat_max  50000 non-null  float64
+dtypes: float64(4)
+memory usage: 1.5 MB
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gdf</span><span class="p">.</span><span class="nf">head</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>bbox_lon_min</th>
+      <th>bbox_lon_max</th>
+      <th>bbox_lat_min</th>
+      <th>bbox_lat_max</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>-47.656360</td>
+      <td>-47.075581</td>
+      <td>50.557852</td>
+      <td>50.627064</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>148.242864</td>
+      <td>148.769836</td>
+      <td>-5.877273</td>
+      <td>-5.291576</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>73.877940</td>
+      <td>74.228977</td>
+      <td>-53.725502</td>
+      <td>-52.926634</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>28.543885</td>
+      <td>29.037097</td>
+      <td>32.862686</td>
+      <td>33.627159</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>-121.953662</td>
+      <td>-121.588566</td>
+      <td>-18.011498</td>
+      <td>-17.174102</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>This function will make a <code class="language-plaintext highlighter-rouge">Polygon</code> spatial datatype using the numerical coordinates in each row of the dataframe, put this in a new column called <code class="language-plaintext highlighter-rouge">geometry</code>, then convert it to a GeoDataFrame with an unprojected Coordinate Reference System.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">make_bbox_polygon</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    
+    <span class="c1">#Column to hold geometry
+</span>    <span class="n">df</span><span class="p">[</span><span class="sh">'</span><span class="s">geometry</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">NaN</span>
+    
+    <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="p">.</span><span class="nf">iterrows</span><span class="p">():</span>
+        <span class="c1">#Make a polygon
+</span>        <span class="c1"># LL, LR, UR, UL
+</span>        <span class="n">point_list</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="sh">'</span><span class="s">bbox_lon_min</span><span class="sh">'</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="sh">'</span><span class="s">bbox_lat_min</span><span class="sh">'</span><span class="p">]),</span>
+            <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="sh">'</span><span class="s">bbox_lon_max</span><span class="sh">'</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="sh">'</span><span class="s">bbox_lat_min</span><span class="sh">'</span><span class="p">]),</span>
+            <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="sh">'</span><span class="s">bbox_lon_max</span><span class="sh">'</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="sh">'</span><span class="s">bbox_lat_max</span><span class="sh">'</span><span class="p">]),</span>
+            <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="sh">'</span><span class="s">bbox_lon_min</span><span class="sh">'</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="sh">'</span><span class="s">bbox_lat_max</span><span class="sh">'</span><span class="p">])</span>
+        <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="nc">Polygon</span><span class="p">(</span><span class="n">point_list</span><span class="p">)</span>
+            <span class="n">df</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ix</span><span class="p">,</span> <span class="sh">'</span><span class="s">geometry</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">bbox</span>
+        <span class="k">except</span> <span class="nb">Exception</span><span class="p">:</span>
+            <span class="nf">print</span><span class="p">(</span><span class="nb">Exception</span><span class="p">)</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">index: </span><span class="sh">'</span> <span class="o">+</span> <span class="nf">str</span><span class="p">(</span><span class="n">ix</span><span class="p">))</span>
+            
+    <span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="p">.</span><span class="nc">GeoDataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="sh">'</span><span class="s">geometry</span><span class="sh">'</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="sh">'</span><span class="s">EPSG:4326</span><span class="sh">'</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">gdf</span>
+</code></pre></div></div>
+
+<p>Use the function to make the DataFrame of bounding box information into a GeoDataFrame of Polygon geometries that can leverage the capabilities of GeoPandas.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%%</span><span class="n">time</span>
+<span class="n">gdf</span> <span class="o">=</span> <span class="nf">make_bbox_polygon</span><span class="p">(</span><span class="n">gdf</span><span class="p">)</span>
+<span class="n">gdf</span><span class="p">.</span><span class="nf">info</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;class 'geopandas.geodataframe.GeoDataFrame'&gt;
+RangeIndex: 50000 entries, 0 to 49999
+Data columns (total 5 columns):
+ #   Column        Non-Null Count  Dtype   
+---  ------        --------------  -----   
+ 0   bbox_lon_min  50000 non-null  float64 
+ 1   bbox_lon_max  50000 non-null  float64 
+ 2   bbox_lat_min  50000 non-null  float64 
+ 3   bbox_lat_max  50000 non-null  float64 
+ 4   geometry      50000 non-null  geometry
+dtypes: float64(4), geometry(1)
+memory usage: 1.9 MB
+CPU times: user 2.73 s, sys: 38.9 ms, total: 2.77 s
+Wall time: 2.75 s
+</code></pre></div></div>
+
+<p>Here’s a close up, showing how some polygons overlap and some don’t:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gdf</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="sh">"</span><span class="s">none</span><span class="sh">"</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="sh">"</span><span class="s">tab:blue</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(-5.0, 5.0)
+</code></pre></div></div>
+
+<p><img src="/assets/images/2025-06-30-fast-overlap/output_12_1.png" alt="png" /></p>
+
+<h1 id="slow-intersection-finding">Slow intersection finding</h1>
+<p>A brute-force method to find all intersecting polygons in this dataset would be to iterate through each row in the GeoDataFrame, checking all rows below that one for intersections. In each iteration, the subset of intersecting rows is captured as a separate GeoDataFrame and appended to a list. GeoPandas supplies a method <a href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.intersects.html"><code class="language-plaintext highlighter-rouge">intersects</code></a> that can be used on a <code class="language-plaintext highlighter-rouge">GeoSeries</code>, which is like a pandas <code class="language-plaintext highlighter-rouge">Series</code> or column, but contains spatial datatypes called geometries. Here this is used on the <code class="language-plaintext highlighter-rouge">geometry</code> column which has index 4:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">intersection_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nf">tqdm</span><span class="p">(</span><span class="n">gdf</span><span class="p">.</span><span class="nf">iterrows</span><span class="p">()):</span>
+    <span class="n">intersection_gdf</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">.</span><span class="n">iloc</span><span class="p">[(</span><span class="n">ix</span><span class="o">+</span><span class="mi">1</span><span class="p">):][</span><span class="n">gdf</span><span class="p">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">ix</span><span class="o">+</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">4</span><span class="p">].</span><span class="nf">intersects</span><span class="p">(</span><span class="n">gdf</span><span class="p">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">ix</span><span class="p">,</span> <span class="mi">4</span><span class="p">])]</span>
+    <span class="n">intersection_gdf</span><span class="p">[</span><span class="sh">'</span><span class="s">index_intersected</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">ix</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">intersection_list</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span><span class="n">intersection_gdf</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="c1">#No intersections
+</span>        <span class="k">pass</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>50000it [01:10, 711.65it/s] 
+</code></pre></div></div>
+
+<p>These results can be combined into a GeoDataFrame, where the number of rows is the number of intersections:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pd</span><span class="p">.</span><span class="nf">concat</span><span class="p">(</span><span class="n">intersection_list</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>bbox_lon_min</th>
+      <th>bbox_lon_max</th>
+      <th>bbox_lat_min</th>
+      <th>bbox_lat_max</th>
+      <th>geometry</th>
+      <th>index_intersected</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>465</th>
+      <td>-47.544003</td>
+      <td>-47.482310</td>
+      <td>50.534371</td>
+      <td>50.913198</td>
+      <td>POLYGON ((-47.544 50.53437, -47.48231 50.53437...</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>9595</th>
+      <td>-47.330469</td>
+      <td>-47.326180</td>
+      <td>50.411872</td>
+      <td>50.771513</td>
+      <td>POLYGON ((-47.33047 50.41187, -47.32618 50.411...</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>31584</th>
+      <td>147.397633</td>
+      <td>148.310990</td>
+      <td>-5.486488</td>
+      <td>-4.705461</td>
+      <td>POLYGON ((147.39763 -5.48649, 148.31099 -5.486...</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>21631</th>
+      <td>73.650220</td>
+      <td>74.490801</td>
+      <td>-53.122555</td>
+      <td>-52.795703</td>
+      <td>POLYGON ((73.65022 -53.12255, 74.4908 -53.1225...</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>1520</th>
+      <td>-154.509087</td>
+      <td>-153.734553</td>
+      <td>-67.132524</td>
+      <td>-66.845929</td>
+      <td>POLYGON ((-154.50909 -67.13252, -153.73455 -67...</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>49664</th>
+      <td>85.777778</td>
+      <td>86.265469</td>
+      <td>-24.767249</td>
+      <td>-24.459444</td>
+      <td>POLYGON ((85.77778 -24.76725, 86.26547 -24.767...</td>
+      <td>49278</td>
+    </tr>
+    <tr>
+      <th>49661</th>
+      <td>-29.854836</td>
+      <td>-29.110292</td>
+      <td>71.209361</td>
+      <td>71.422139</td>
+      <td>POLYGON ((-29.85484 71.20936, -29.11029 71.209...</td>
+      <td>49283</td>
+    </tr>
+    <tr>
+      <th>49543</th>
+      <td>-104.701379</td>
+      <td>-103.983279</td>
+      <td>-83.056904</td>
+      <td>-82.093236</td>
+      <td>POLYGON ((-104.70138 -83.0569, -103.98328 -83....</td>
+      <td>49368</td>
+    </tr>
+    <tr>
+      <th>49922</th>
+      <td>-173.759994</td>
+      <td>-173.177144</td>
+      <td>54.214183</td>
+      <td>54.769436</td>
+      <td>POLYGON ((-173.75999 54.21418, -173.17714 54.2...</td>
+      <td>49398</td>
+    </tr>
+    <tr>
+      <th>49992</th>
+      <td>15.277091</td>
+      <td>16.213651</td>
+      <td>64.108388</td>
+      <td>64.361987</td>
+      <td>POLYGON ((15.27709 64.10839, 16.21365 64.10839...</td>
+      <td>49849</td>
+    </tr>
+  </tbody>
+</table>
+<p>22880 rows × 6 columns</p>
+</div>
+
+<p>This indicates there are 22,880 intersections between polygons in the dataset. The numerical index of this GeoDataFrame can be compared with the <code class="language-plaintext highlighter-rouge">index_intersected</code> column to see which geometries intersect with each other.</p>
+
+<h1 id="fast-intersection-finding">Fast intersection finding</h1>
+<p>The brute-force method does not fully leverage the spatial index that underlies the <code class="language-plaintext highlighter-rouge">geometry</code> column of a GeoDataFrame. Roughly speaking, the spatial index uses an <a href="https://en.wikipedia.org/wiki/R-tree">R-tree</a> to group nearby objects in a data structure, so that the intersection checking procedure does not need to consider far-away geometries, only intersection candidates from nearby. The effect of this is that fewer candidates for any particular polygon need to be examined, reducing computation time. Here’s an example R-tree from the Wikipedia article, for visual intuition:</p>
+
+<p><img src="/assets/images/2025-06-30-fast-overlap/R-tree.svg" alt="By Skinkie, w:en:Radim Baca - Own work, Public Domain, https://commons.wikimedia.org/w/index.php?curid=9938400" /></p>
+
+<p>Image credit: By Skinkie, w:en:Radim Baca - Own work, Public Domain, https://commons.wikimedia.org/w/index.php?curid=9938400</p>
+
+<p>GeoPandas <a href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.sjoin.html"><code class="language-plaintext highlighter-rouge">sjoin</code></a> operates on GeoDataFrames and can take a variety of <code class="language-plaintext highlighter-rouge">predicates</code> which describe spatial relationships between geometries, such as <code class="language-plaintext highlighter-rouge">intersects</code>. To find intersections within one dataset, spatially join it to itself:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%%</span><span class="n">time</span>
+<span class="n">intersection_gdf</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">.</span><span class="nf">sjoin</span><span class="p">(</span>
+    <span class="n">gdf</span><span class="p">,</span>
+    <span class="n">how</span><span class="o">=</span><span class="sh">'</span><span class="s">inner</span><span class="sh">'</span><span class="p">,</span>
+    <span class="n">predicate</span><span class="o">=</span><span class="sh">'</span><span class="s">intersects</span><span class="sh">'</span><span class="p">,</span>
+    <span class="n">lsuffix</span><span class="o">=</span><span class="sh">'</span><span class="s">left</span><span class="sh">'</span><span class="p">,</span>
+    <span class="n">rsuffix</span><span class="o">=</span><span class="sh">'</span><span class="s">right</span><span class="sh">'</span>
+<span class="p">)</span>       
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CPU times: user 71.1 ms, sys: 4.03 ms, total: 75.1 ms
+Wall time: 74.2 ms
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">intersection_gdf</span><span class="p">.</span><span class="nf">info</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;class 'geopandas.geodataframe.GeoDataFrame'&gt;
+Index: 95760 entries, 0 to 49999
+Data columns (total 10 columns):
+ #   Column              Non-Null Count  Dtype   
+---  ------              --------------  -----   
+ 0   bbox_lon_min_left   95760 non-null  float64 
+ 1   bbox_lon_max_left   95760 non-null  float64 
+ 2   bbox_lat_min_left   95760 non-null  float64 
+ 3   bbox_lat_max_left   95760 non-null  float64 
+ 4   geometry            95760 non-null  geometry
+ 5   index_right         95760 non-null  int64   
+ 6   bbox_lon_min_right  95760 non-null  float64 
+ 7   bbox_lon_max_right  95760 non-null  float64 
+ 8   bbox_lat_min_right  95760 non-null  float64 
+ 9   bbox_lat_max_right  95760 non-null  float64 
+dtypes: float64(8), geometry(1), int64(1)
+memory usage: 8.0 MB
+</code></pre></div></div>
+
+<p>The raw output includes some of the geometric information from the left and right GeoDataFrames, which in this case are the same GeoDataFrame <code class="language-plaintext highlighter-rouge">gdf</code>. Both index values of the resulting GeoDataFrame <code class="language-plaintext highlighter-rouge">intersection_gdf</code> and the values in the column <code class="language-plaintext highlighter-rouge">index_right</code> are taken from the index of <code class="language-plaintext highlighter-rouge">gdf</code>. These pairs of index values show which polygons from this dataset intersect with each other:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">intersection_gdf</span><span class="p">[</span><span class="sh">'</span><span class="s">index_right</span><span class="sh">'</span><span class="p">].</span><span class="nf">head</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0     9595
+0        0
+0      465
+1        1
+1    31584
+Name: index_right, dtype: int64
+</code></pre></div></div>
+
+<p>Unlike in the brute-force approach where each polygon was only checked once against all other polygons, here every polygon in the dataset has been compared with every other polygon twice, as well as itself, since a self-join was done. Remove rows where the GeoDataFrame index equals <code class="language-plaintext highlighter-rouge">index_right</code>, the index of the intersecting polygon, since these are intersections of a polygon with itself:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">same_polygon</span> <span class="o">=</span> <span class="n">intersection_gdf</span><span class="p">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">intersection_gdf</span><span class="p">[</span><span class="sh">'</span><span class="s">index_right</span><span class="sh">'</span><span class="p">]</span>
+<span class="n">intersection_gdf</span> <span class="o">=</span> <span class="n">intersection_gdf</span><span class="p">[</span><span class="o">~</span><span class="n">same_polygon</span><span class="p">]</span>
+<span class="n">intersection_gdf</span><span class="p">.</span><span class="n">shape</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(45760, 10)
+</code></pre></div></div>
+
+<p>After getting rid of these vacuously true intersections, the number of rows here is still twice as many as the number of intersections. For example, the polygon with index 0 intersects with two others: indices 9595 and 465:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">intersection_gdf</span><span class="p">[</span><span class="sh">'</span><span class="s">index_right</span><span class="sh">'</span><span class="p">].</span><span class="nf">head</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0     9595
+0      465
+1    31584
+2    21631
+6    27084
+Name: index_right, dtype: int64
+</code></pre></div></div>
+
+<p>And vice versa: polygons with indices 9595 and 465 are reported as intersecting with index 0.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">intersection_gdf</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">intersection_gdf</span><span class="p">.</span><span class="n">index</span><span class="o">==</span><span class="mi">9595</span><span class="p">,</span> <span class="sh">'</span><span class="s">index_right</span><span class="sh">'</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>9595    0
+Name: index_right, dtype: int64
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">intersection_gdf</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">intersection_gdf</span><span class="p">.</span><span class="n">index</span><span class="o">==</span><span class="mi">465</span><span class="p">,</span> <span class="sh">'</span><span class="s">index_right</span><span class="sh">'</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>465    0
+Name: index_right, dtype: int64
+</code></pre></div></div>
+
+<p>To get rid of duplicates like this, make the index into a column to more easily work with it, then make a new column <code class="language-plaintext highlighter-rouge">index_min_max</code> which is the left and right indices of the intersecting polygons, but sorted as a comma-separated list:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">intersection_gdf</span><span class="p">[</span><span class="sh">'</span><span class="s">index_left</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">intersection_gdf</span><span class="p">.</span><span class="n">index</span>
+
+<span class="n">intersection_gdf</span><span class="p">[</span><span class="sh">'</span><span class="s">index_min_max</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">intersection_gdf</span><span class="p">[[</span><span class="sh">'</span><span class="s">index_left</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">index_right</span><span class="sh">'</span><span class="p">]].</span><span class="nf">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">).</span><span class="nf">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">).</span><span class="nb">str</span><span class="p">.</span><span class="nf">cat</span><span class="p">(</span>
+        <span class="n">intersection_gdf</span><span class="p">[[</span><span class="sh">'</span><span class="s">index_left</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">index_right</span><span class="sh">'</span><span class="p">]].</span><span class="nf">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">).</span><span class="nf">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
+        <span class="n">sep</span><span class="o">=</span><span class="sh">'</span><span class="s">, </span><span class="sh">'</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">index_min_max</code> will be identical for an intersection no matter which of the two polygons is in the index or <code class="language-plaintext highlighter-rouge">index_right</code> column, and can be used to deduplicate the dataset. By supplying <code class="language-plaintext highlighter-rouge">keep='first'</code> to pandas <code class="language-plaintext highlighter-rouge">drop_duplicates</code>, the record that is retained will have the smaller intersecting index in the GeoDataFrame index, and the larger intersecting index in the <code class="language-plaintext highlighter-rouge">index_right</code> column, since the GeoDataFrame <code class="language-plaintext highlighter-rouge">intersection_gdf</code> was sorted on its index to begin with.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">print</span><span class="p">(</span><span class="n">intersection_gdf</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">intersection_gdf</span><span class="p">.</span><span class="nf">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="sh">'</span><span class="s">index_min_max</span><span class="sh">'</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="sh">'</span><span class="s">first</span><span class="sh">'</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">intersection_gdf</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(45760, 12)
+(22880, 12)
+</code></pre></div></div>
+
+<p>After this 22,880 intersections are found, as in the brute-force approach. It takes a little extra coding effort to tease apart the results of the spatial self-join, but this becomes worth it as datasets grow larger and the time difference in processing between the two approaches grows. In this synthetic example 50,000 polygons are used, which took a little over a minute in the slow approach and less than a second in the fast approach. I tried with several other numbers of polygons and found the following processing times for the slow and fast approaches:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">time_compare_df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="nc">DataFrame</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="sh">'</span><span class="s">Number of polygons</span><span class="sh">'</span><span class="p">:[</span><span class="mi">5000</span><span class="p">,</span> <span class="mi">50000</span><span class="p">,</span> <span class="mi">100000</span><span class="p">,</span> <span class="mi">200000</span><span class="p">],</span>
+          <span class="sh">'</span><span class="s">Slow intersection finding</span><span class="sh">'</span><span class="p">:[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">215</span><span class="p">,</span> <span class="mi">717</span><span class="p">],</span>
+          <span class="sh">'</span><span class="s">Fast intersection finding</span><span class="sh">'</span><span class="p">:[</span><span class="mf">0.017</span><span class="p">,</span> <span class="mf">0.104</span><span class="p">,</span> <span class="mf">0.223</span><span class="p">,</span> <span class="mf">0.746</span><span class="p">]</span>
+         <span class="p">}</span>
+<span class="p">).</span><span class="nf">set_index</span><span class="p">(</span><span class="sh">'</span><span class="s">Number of polygons</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">time_compare_df</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Slow intersection finding</th>
+      <th>Fast intersection finding</th>
+    </tr>
+    <tr>
+      <th>Number of polygons</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>5000</th>
+      <td>4</td>
+      <td>0.017</td>
+    </tr>
+    <tr>
+      <th>50000</th>
+      <td>70</td>
+      <td>0.104</td>
+    </tr>
+    <tr>
+      <th>100000</th>
+      <td>215</td>
+      <td>0.223</td>
+    </tr>
+    <tr>
+      <th>200000</th>
+      <td>717</td>
+      <td>0.746</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">time_compare_df</span><span class="p">.</span><span class="nf">plot</span><span class="p">(</span><span class="n">marker</span><span class="o">=</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="nf">ylabel</span><span class="p">(</span><span class="sh">'</span><span class="s">Seconds</span><span class="sh">'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0, 0.5, 'Seconds')
+</code></pre></div></div>
+
+<p><img src="/assets/images/2025-06-30-fast-overlap/output_38_1.png" alt="png" /></p>
+
+<p>Real-world polygons representing field boundaries are often more complicated than the simple rectangles constructed here, and it can take hours or days to process similar numbers of polygons for intersections using the brute force approach. The benefits of a spatial index are even more valuable in this situation.</p>
+
+<h1 id="fast-intersection-within-buffer">Fast intersection within buffer</h1>
+<p><a href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.sjoin_nearest.html#geopandas.GeoDataFrame.sjoin_nearest"><code class="language-plaintext highlighter-rouge">sjoin_nearest</code></a> is similar to <code class="language-plaintext highlighter-rouge">sjoin</code>, but matches geometries based on distance within some limit. The approach of doing a self-join can be extended to <code class="language-plaintext highlighter-rouge">sjoin_nearest</code> to determine which polygons within a single dataset are within a certain distance of each other.</p>
+
+<p>With this intersection-finding method, a maximum search distance is supplied, so the GeoDataframe needs to be in a projected Coordinate Reference System in units of distance and not degrees. <code class="language-plaintext highlighter-rouge">ESRI:54034</code> is a cylindrical equal area projection for the world:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gdf_projected</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">.</span><span class="nf">to_crs</span><span class="p">(</span><span class="sh">'</span><span class="s">ESRI:54034</span><span class="sh">'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">sjoin_nearest</code> may be called as a method on a GeoDataframe. The differences from <code class="language-plaintext highlighter-rouge">sjoin</code> include specifying the maximum distance <code class="language-plaintext highlighter-rouge">max_distance</code> within which to search for geometries in the <code class="language-plaintext highlighter-rouge">right</code> GeoDataframe. The units are the same as the Coordinate Reference System, which are meters in this case. Unlike with <code class="language-plaintext highlighter-rouge">sjoin</code>, here the opportunity exists to automatically exclude intersections with identical geometries, by supplying <code class="language-plaintext highlighter-rouge">exclusive=True</code>. This spatial self-join looks for all geometries within a dataset that are within 10 km of each other, excluding the fact that a geometry is within 10 km of itself:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%%</span><span class="n">time</span>
+<span class="n">intersection_nearest_gdf</span> <span class="o">=</span> <span class="n">gdf_projected</span><span class="p">.</span><span class="nf">sjoin_nearest</span><span class="p">(</span>
+    <span class="n">right</span><span class="o">=</span><span class="n">gdf_projected</span><span class="p">,</span>
+    <span class="n">how</span><span class="o">=</span><span class="sh">'</span><span class="s">inner</span><span class="sh">'</span><span class="p">,</span>
+    <span class="n">max_distance</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">lsuffix</span><span class="o">=</span><span class="sh">'</span><span class="s">left</span><span class="sh">'</span><span class="p">,</span>
+    <span class="n">rsuffix</span><span class="o">=</span><span class="sh">'</span><span class="s">right</span><span class="sh">'</span><span class="p">,</span>
+    <span class="n">distance_col</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="n">exclusive</span><span class="o">=</span><span class="bp">True</span>
+<span class="p">)</span>
+<span class="n">intersection_nearest_gdf</span><span class="p">.</span><span class="nf">info</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;class 'geopandas.geodataframe.GeoDataFrame'&gt;
+Index: 53438 entries, 0 to 49997
+Data columns (total 10 columns):
+ #   Column              Non-Null Count  Dtype   
+---  ------              --------------  -----   
+ 0   bbox_lon_min_left   53438 non-null  float64 
+ 1   bbox_lon_max_left   53438 non-null  float64 
+ 2   bbox_lat_min_left   53438 non-null  float64 
+ 3   bbox_lat_max_left   53438 non-null  float64 
+ 4   geometry            53438 non-null  geometry
+ 5   index_right         53438 non-null  int64   
+ 6   bbox_lon_min_right  53438 non-null  float64 
+ 7   bbox_lon_max_right  53438 non-null  float64 
+ 8   bbox_lat_min_right  53438 non-null  float64 
+ 9   bbox_lat_max_right  53438 non-null  float64 
+dtypes: float64(8), geometry(1), int64(1)
+memory usage: 4.5 MB
+CPU times: user 1.06 s, sys: 352 ms, total: 1.41 s
+Wall time: 1.03 s
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">intersection_nearest_gdf</span><span class="p">[</span><span class="sh">'</span><span class="s">index_right</span><span class="sh">'</span><span class="p">].</span><span class="nf">head</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0     9595
+0      465
+1    31584
+2    21631
+3    11176
+Name: index_right, dtype: int64
+</code></pre></div></div>
+
+<p>Similar to the results of <code class="language-plaintext highlighter-rouge">sjoin</code>, every intersection is listed twice here, so the number of unique intersections is half the dataframe row count:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">intersection_nearest_gdf</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>26719.0
+</code></pre></div></div>
+
+<p>This is more intersections than when not using a buffer (22,880), which makes sense.</p>
+
+<h1 id="conclusion-and-further-resources">Conclusion and further resources</h1>
+
+<p>This post showed how to use <code class="language-plaintext highlighter-rouge">sjoin</code> and <code class="language-plaintext highlighter-rouge">sjoin_nearest</code> to perform spatial self-joins in GeoPandas, to efficiently find overlaps within a geographic dataset. The efficiency gains over a slower, brute-force method become more apparent as the size of datasets grow, and the geographic data is more complex.</p>
+
+<p>The spatial join methods shown here were illustrated with self-joins, but could be extended to work with two different datasets, to answer questions like “how many homes in this city are within 2 miles of a grocery store?” with a homes dataset and a grocery store dataset.</p>
+
+<p>These analyses performed in a Python environment with GeoPandas could also be performed in SQL databases that offer support for spatial datatypes. <a href="https://postgis.net/">PostGIS/PostgreSQL</a> is typically the first-choice SQL platform when working with spatial data is important - spatial datatypes are also available in <a href="https://dev.mysql.com/doc/refman/8.4/en/spatial-type-overview.html">MySQL</a>.</p>
+
+<p>While a massive speed boost was observed here by spatially joining a dataset on itself, <a href="https://geoffboeing.com/2016/10/r-tree-spatial-index-python/">it has also been shown</a> that if the spatial extent of two geographic datasets is similar or the same, it may be faster to break one of them up into smaller sections, and iterate through a spatial join with each of these.</p>
+
+  </div><a class="u-url" href="/fast-overlap/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Steve Klosterman</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Steve Klosterman</li><li><a class="u-email" href="mailto:steve.klosterman@gmail.com">steve.klosterman@gmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/klostest"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">klostest</span></a></li><li><a href="https://www.linkedin.com/in/stephenklosterman"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">stephenklosterman</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Data Science and Machine Learning</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

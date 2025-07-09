@@ -1,2 +1,5 @@
 .sass-cache
 .jekyll-metadata
+*/.DS_Store
+assets/images/.DS_Store
+

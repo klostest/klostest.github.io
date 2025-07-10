@@ -5,8 +5,7 @@ date:   2025-06-30
 permalink: /fast-overlap/
 post_description: Comparison of a slower, brute-force method of checking for intersections within a geographic dataset, with a faster method that leverages a technology known as a spatial index or R-tree, using the GeoPandas Python package.
 post_image: "/assets/images/2025-06-30-fast-overlap/output_12_1.png"
-reading_time_minutes: 20
-category: Technical
+category: Technical coding
 ---
 
 Finding intersections and other types of spatial overlaps are common tasks in computational geoscience. Applications include finding road intersections, determining which properties lie within protected areas, or learning the distance from homes to important businesses like grocery stores.

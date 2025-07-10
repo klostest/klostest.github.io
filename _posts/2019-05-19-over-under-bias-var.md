@@ -6,8 +6,7 @@ mathjax: true
 permalink: /over-under/
 post_description: Explore these foundational machine learning concepts and learn how to use regularization to leverage the bias-variance tradeoff to improve model performance, through an illustrative example of polynomial fitting in Python and scikit-learn. 
 post_image: "/assets/images/suits-that-fit-bad-too-big-too-smal_cropped.jpg"
-reading_time_minutes: 25
-category: Technical
+category: Technical coding
 ---
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>

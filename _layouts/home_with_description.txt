@@ -23,7 +23,7 @@ layout: default
 	<img src={{post.post_image}} alt="Suit graphic" style="width: 350px;"/>
         </a>
 	<br>
-	<b> {{post.category}} post, {{post.reading_time_minutes}} minute read </b>
+	<b> {{post.category}} post </b>
 	<br>
 	{{ post.post_description }}
       </li>

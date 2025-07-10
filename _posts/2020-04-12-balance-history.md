@@ -6,8 +6,7 @@ mathjax: true
 permalink: /balance-history/
 post_description: A practical post on data wrangling and visualization that could be applied in a professional setting, or to your personal finances.
 post_image: "/assets/images/2020-04-12-balance-history/pexels-photo-209224.jpeg"
-reading_time_minutes: 18
-category: Technical
+category: Technical coding
 ---
 
 <img src="/assets/images/2020-04-12-balance-history/pexels-photo-209224.jpeg" alt="Accounting image" style="width: 350px; border: 10px solid white;" align="right"/>

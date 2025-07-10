@@ -5,8 +5,7 @@ date:   2020-07-08
 permalink: /uplift-modeling/
 post_description: An introduction to a powerful way of predicting individual treatment effects, with synthetic data in Python using pandas and XGBoost.
 post_image: "/assets/images/2020-07-08-uplift-modeling/space-shuttle-774_1280.jpg"
-reading_time_minutes: 33
-category: Technical
+category: Technical coding
 ---
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>

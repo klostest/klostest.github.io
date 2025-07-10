@@ -5,8 +5,7 @@ date:   2020-05-03
 permalink: /energy-arbitrage/
 post_description: How to use a classic mathematical optimization technique to guide the operation of a grid-connected battery and maximize profit.
 post_image: "/assets/images/2020-05-03-energy-arbitrage/cable-clouds-conductor-current-189524.jpg"
-reading_time_minutes: 30
-category: Technical
+category: Technical coding
 ---
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>

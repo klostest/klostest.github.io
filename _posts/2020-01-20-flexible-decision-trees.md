@@ -5,7 +5,6 @@ date:   2020-01-20
 permalink: /flexible-decision-trees/
 post_description: This blog post will examine a hypothetical dataset of website visits and customer conversion, to illustrate how decision trees are a more flexible mathematical model than linear models such as logistic regression. 
 post_image: "/assets/images/2020-01-20-flexible-decision-trees/img2.png"
-reading_time_minutes: 7
 category: Conceptual
 ---
 

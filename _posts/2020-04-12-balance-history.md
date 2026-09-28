@@ -4,8 +4,8 @@ title:  "Visualizing a balance history from transaction data using pandas and Pl
 date:   2020-04-12
 mathjax: true
 permalink: /balance-history/
-post_description: A practical post on data wrangling and visualization that could be applied in a professional setting, or to your personal finances.
-post_image: "/assets/images/2020-04-12-balance-history/pexels-photo-209224.jpeg"
+description: A practical post on data wrangling and visualization that could be applied in a professional setting, or to your personal finances.
+image: "/assets/images/2020-04-12-balance-history/pexels-photo-209224.jpeg"
 category: Technical coding
 ---
 

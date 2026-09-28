@@ -3,8 +3,8 @@ layout: post
 title:  "Fast overlap finding for geographic datasets using GeoPandas"
 date:   2025-06-30
 permalink: /fast-overlap/
-post_description: Comparison of a slower, brute-force method of checking for intersections within a geographic dataset, with a faster method that leverages a technology known as a spatial index or R-tree, using the GeoPandas Python package.
-post_image: "/assets/images/2025-06-30-fast-overlap/output_12_1.png"
+description: Comparison of a slower, brute-force method of checking for intersections within a geographic dataset, with a faster method that leverages a technology known as a spatial index or R-tree, using the GeoPandas Python package.
+image: "/assets/images/2025-06-30-fast-overlap/output_12_1.png"
 category: Technical coding
 ---
 

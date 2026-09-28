@@ -3,8 +3,8 @@ layout: post
 title:  "Designing an energy arbitrage strategy with linear programming"
 date:   2020-05-03
 permalink: /energy-arbitrage/
-post_description: How to use a classic mathematical optimization technique to guide the operation of a grid-connected battery and maximize profit.
-post_image: "/assets/images/2020-05-03-energy-arbitrage/cable-clouds-conductor-current-189524.jpg"
+description: How to use a classic mathematical optimization technique to guide the operation of a grid-connected battery and maximize profit.
+image: "/assets/images/2020-05-03-energy-arbitrage/cable-clouds-conductor-current-189524.jpg"
 category: Technical coding
 ---
 

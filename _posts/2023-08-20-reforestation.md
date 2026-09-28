@@ -3,8 +3,8 @@ layout: post
 title:  "Mapping the global potential of natural reforestation projects using ground observations, remote sensing, and machine learning"
 date:   2023-08-20
 permalink: /reforestation/
-post_description: Creation of a global model for natural forest regeneration rates, with a Google Earth Engine app demonstrated for Africa.
-post_image: "/assets/images/2023-08-20-reforestation/fig_8.webp"
+description: Creation of a global model for natural forest regeneration rates, with a Google Earth Engine app demonstrated for Africa.
+image: "/assets/images/2023-08-20-reforestation/fig_8.webp"
 category: Conceptual
 ---
 

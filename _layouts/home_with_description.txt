@@ -20,12 +20,12 @@ layout: default
           <a class="post-link" href="{{ post.url | relative_url }}">
             {{ post.title | escape }}
         </h3>
-	<img src={{post.post_image}} alt="Suit graphic" style="width: 350px;"/>
+	<img src={{post.image}} alt="Suit graphic" style="width: 350px;"/>
         </a>
 	<br>
 	<b> {{post.category}} post </b>
 	<br>
-	{{ post.post_description }}
+	{{ post.description }}
       </li>
       {%- endfor -%}
     </ul>

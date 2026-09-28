@@ -4,8 +4,8 @@ title:  "Overfitting, underfitting, and the bias-variance tradeoff"
 date:   2019-05-19
 mathjax: true
 permalink: /over-under/
-post_description: Explore these foundational machine learning concepts and learn how to use regularization to leverage the bias-variance tradeoff to improve model performance, through an illustrative example of polynomial fitting in Python and scikit-learn. 
-post_image: "/assets/images/suits-that-fit-bad-too-big-too-smal_cropped.jpg"
+description: Explore these foundational machine learning concepts and learn how to use regularization to leverage the bias-variance tradeoff to improve model performance, through an illustrative example of polynomial fitting in Python and scikit-learn. 
+image: "/assets/images/suits-that-fit-bad-too-big-too-smal_cropped.jpg"
 category: Technical coding
 ---
 
